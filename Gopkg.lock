@@ -10,19 +10,19 @@
   version = "v4.0.2"
 
 [[projects]]
-  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
-  name = "github.com/pkg/errors"
+  digest = "1:482df2b228f99d5b8bb3dcf65843867fb130dd50c501abaa3a7dfcecce826732"
+  name = "github.com/pascaldekloe/jwt"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
-  version = "v0.8.1"
+  revision = "4616287246b45b920c9c4979e6239585f4b9a897"
+  version = "v1.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/go-chi/chi",
-    "github.com/pkg/errors",
+    "github.com/pascaldekloe/jwt",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

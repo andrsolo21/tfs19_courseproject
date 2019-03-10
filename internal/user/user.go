@@ -11,8 +11,8 @@ type User struct {
 	Birthday   time.Time `json:"birthday"` //
 	Email      string    `json:"email"`
 	Password   string    `json:"password"`
-	Created_at time.Time `json:"created_at"`
-	Updated_at time.Time `json:"updated_at"`
+	Created_at time.Time //`json:"created_at"`
+	Updated_at time.Time //`json:"updated_at"`
 }
 
 type Lot struct {
