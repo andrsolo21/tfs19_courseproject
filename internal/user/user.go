@@ -15,6 +15,20 @@ type User struct {
 	Updated_at time.Time //`json:"updated_at"`
 }
 
+func (us1 User) CheckUser(us2 User)bool{
+	if us1.Email == us2.Email {
+		return false
+	}
+	return true
+}
+
+func (us1 User) AuthUser(log string, pas string)bool{
+	if us1.Email == log && us1.Password == pas{
+		return true
+	}
+	return false
+}
+
 type Lot struct {
 	ID          int       `json:"id"`
 	Creator_id  int       `json:"creator_id"`

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"courseproject/internal/auth"
 	"courseproject/internal/user"
 	"encoding/json"
 	"fmt"
@@ -10,7 +9,7 @@ import (
 	"time"
 )
 
-func signup(w http.ResponseWriter, r *http.Request){
+func signup(w http.ResponseWriter, r *http.Request) {
 
 	var resp user.User
 
@@ -26,35 +25,23 @@ func signup(w http.ResponseWriter, r *http.Request){
 	resp.Created_at = time.Now()
 	resp.Updated_at = time.Now()
 
-	//fmt.Fprintf(w, "\nEmail:\n", resp.Email, "\nPassword:\n", resp.Password)
-	fmt.Fprintln(w,"id: ", resp.ID)
-	//fmt.Println("id: ", resp)
-	fmt.Fprintln(w,"fn: ", resp.First_name)
-	fmt.Fprintln(w,"ln: ", resp.Last_name)
-	fmt.Fprintln(w,"e: ", resp.Email)
-	fmt.Fprintln(w,"p: ", resp.Password)
-	fmt.Fprintln(w,"birth", resp.Birthday.String())
-	w.Write([]byte("\nGreetings 12345!"))
-}
-
-func signup2(w http.ResponseWriter, r *http.Request){
-	w.Header().Add("X-MY-LOCATION", "ALASKA")
-	w.Write([]byte("\nGreetings 12345!"))
-}
-
-func signin(w http.ResponseWriter, r *http.Request){
-
-	var resp auth.Logpas
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		fmt.Fprintf(w, "err %q\n", err, err.Error())
-	} else {
-		err = json.Unmarshal(body, &resp)
-		if err != nil {
-			fmt.Println(w, "can't unmarshal: ", err.Error())
-		}
+	var flag bool
+	data, flag = data.AddUser(resp)
+	if flag == false {
+		fmt.Println("not")
 	}
+	fmt.Fprintln(w, "otv", flag)
 
-	w.Write([]byte("\nGreetings 12345!"))
+	fmt.Println(data.LenA())
+}
+
+func signin(w http.ResponseWriter, r *http.Request) {
+
+	pas := r.PostFormValue("pas")
+	log := r.PostFormValue("log")
+
+
+
+	fmt.Fprintln(w, "pas: ", pas)
+	fmt.Fprintln(w, "log: ", log)
 }

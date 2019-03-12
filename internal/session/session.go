@@ -8,3 +8,4 @@ type Session struct {
 	Created_at  time.Time `json:"created_at"`
 	Valid_until time.Time `json:"valid_until"`
 }
+
