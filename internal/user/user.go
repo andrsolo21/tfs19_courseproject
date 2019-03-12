@@ -17,9 +17,9 @@ type User struct {
 
 func (us1 User) CheckUser(us2 User)bool{
 	if us1.Email == us2.Email {
-		return false
+		return true
 	}
-	return true
+	return false
 }
 
 func (us1 User) AuthUser(log string, pas string)bool{

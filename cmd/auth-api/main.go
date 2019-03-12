@@ -15,6 +15,7 @@ func main() {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", signup)
 		r.Post("/signin", signin)
+		r.Put("/users/0", users0)
 	})
 	http.ListenAndServe(":5000", r)
 }
