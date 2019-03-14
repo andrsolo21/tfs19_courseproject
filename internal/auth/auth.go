@@ -11,6 +11,15 @@ type Auth struct {
 	ses  []session.Session
 }
 
+/*func Init(){
+
+	var auth Auth
+
+	auth
+
+
+}*/
+
 func genToken() string {
 	return "tokenSafety"
 }
@@ -73,30 +82,28 @@ func (auth Auth) authUser(log string, pas string) (user.User, bool) {
 	return user.User{}, false
 }
 
+/*func (auth Auth) getUserById(ID int) (user.User, bool) {
+	//TODO будет с SQL
+	for _, el := range auth.data {
+		if el.ID == ID {
+			return el, true
+		}
+	}
+	return user.User{}, false
+}*/
+
 func (auth Auth) ProfileUpdate(token string, upd user.User)(Auth, bool) {
 
-	sesio, flag := auth.checkSession(token)
+	sesio, flag := auth.getSession(token)
 	if flag == false{
 		return auth, false
 	}
 
-	var oldUser user.User
-
-	oldUser, flag = auth.authUser(upd.Email, upd.Password)
-	if flag == false{
-		return auth, false
-	}
-
-	if sesio.User_id != oldUser.ID{
-		return auth, false
-	}
-
-	auth.changeUser(oldUser.ID, upd)
-
+	auth.changeUser(sesio.User_id, upd)
 	return auth, true
 }
 
-func (auth Auth) checkSession(token string) (session.Session, bool) {
+func (auth Auth) getSession(token string) (session.Session, bool) {
 	//TODO будет с SQL
 	for _, el := range auth.ses {
 		if token == el.Session_id {
