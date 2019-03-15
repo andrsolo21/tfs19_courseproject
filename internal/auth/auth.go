@@ -3,6 +3,9 @@ package auth
 import (
 	"courseproject/internal/session"
 	"courseproject/internal/user"
+	"encoding/base64"
+	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -11,17 +14,18 @@ type Auth struct {
 	ses  []session.Session
 }
 
-/*func Init(){
-
-	var auth Auth
-
-	auth
-
-
-}*/
-
 func genToken() string {
-	return "tokenSafety"
+	size := 10
+
+	rb := make([]byte,size)
+	_, err := rand.Read(rb)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	rs := base64.URLEncoding.EncodeToString(rb)
+	return rs
 }
 
 func (auth Auth) AddUser(add user.User) (Auth, bool) {
