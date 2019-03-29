@@ -27,10 +27,9 @@ func strartListening() {
 	})
 
 	http.ListenAndServe(":5000", r)
-
 }
 
-func signup(w http.ResponseWriter, r *http.Request) {
+func signup(w http.ResponseWriter, r *http.Request)  {
 
 	var resp user.User
 
