@@ -115,7 +115,7 @@ func (auth Auth) GetSession(token string) (session.Session, bool) {
 	return session.Session{}, false
 }
 
-func (auth Auth) ChangeUser(id int, upd user.User)user.User {
+func (auth Auth) ChangeUser(id int, upd user.ShortUser)user.User {
 	//TODO будет с SQL
 	for i := range auth.data {
 		if auth.data[i].ID == id {

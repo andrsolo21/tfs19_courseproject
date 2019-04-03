@@ -10,11 +10,17 @@ type User struct {
 	ID         int       `json:"id"`
 	First_name string    `json:"first_name"`
 	Last_name  string    `json:"last_name"`
-	Birthday   time.Time `json:"birthday"` //
+	Birthday   time.Time `json:"birthday"`
 	Email      string    `json:"email"`
 	Password   string    `json:"password"`
 	Created_at time.Time //`json:"created_at"`
 	Updated_at time.Time //`json:"updated_at"`
+}
+
+type ShortUser struct {
+	First_name string    `json:"first_name"`
+	Last_name  string    `json:"last_name"`
+	Birthday   time.Time `json:"birthday"`
 }
 
 var em string = "email already exists"
@@ -33,24 +39,25 @@ func (us1 User) AuthUser(log string, pas string)bool{
 	return false
 }
 
-func (us User) ToJson()([]byte){
-	mapVar, _ := json.Marshal(map[string]string{
-		"id":         strconv.Itoa(us.ID),
-		"first_name": us.First_name,
-		"last_name":  us.Last_name,
-		"birthday":   us.Birthday.Format(time.ANSIC),
-		"email":      us.Email,
-		"created_at": us.Created_at.Format(time.ANSIC),})
+func (us User) ToJson(seq bool)([]byte){
+	var mapVar []byte
+	if seq {
+		mapVar, _ = json.Marshal(map[string]string{
+			"id":         strconv.Itoa(us.ID),
+			"first_name": us.First_name,
+			"last_name":  us.Last_name,
+			"birthday":   us.Birthday.Format(time.ANSIC),
+			"email":      us.Email,
+			"created_at": us.Created_at.Format(time.ANSIC),})
+	}else{
+		mapVar, _ = json.Marshal(map[string]string{
+			"id":         strconv.Itoa(us.ID),
+			"first_name": us.First_name,
+			"last_name":  us.Last_name,
+			"birthday":   us.Birthday.Format(time.ANSIC),
+			"email":      "*",
+			"created_at": us.Created_at.Format(time.ANSIC),})
+	}
 	return mapVar
 }
 
-type Lot struct {
-	ID          int       `json:"id"`
-	Creator_id  int       `json:"creator_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"` //
-	Min_price   float64   `json:"min_price"`
-	Price_step  float64   `json:"price_step"`
-	Created_at  time.Time `json:"created_at"`
-	Updated_at  time.Time `json:"updated_at"`
-}

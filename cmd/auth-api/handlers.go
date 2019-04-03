@@ -99,7 +99,7 @@ func userPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var upd user.User
+	var upd user.ShortUser
 	var err error
 
 	upd.First_name = r.PostFormValue("first_name")
@@ -117,7 +117,7 @@ func userPut(w http.ResponseWriter, r *http.Request) {
 
 	us := data.ChangeUser(sesio.User_id, upd)
 
-	_, _ = w.Write(us.ToJson())
+	_, _ = w.Write(us.ToJson(true))
 }
 
 func userGet(w http.ResponseWriter, r *http.Request) {
@@ -142,6 +142,7 @@ func userGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID2 := userID
 	if userID == 0{
 		userID = ses.User_id
 	}
@@ -153,6 +154,11 @@ func userGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = w.Write(us.ToJson())
+	if userID2 == 0{
+		_, _ = w.Write(us.ToJson(true))
+	}else{
+		_, _ = w.Write(us.ToJson(false))
+	}
+
 
 }
