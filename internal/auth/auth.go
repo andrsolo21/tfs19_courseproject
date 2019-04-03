@@ -31,7 +31,7 @@ func genToken() string {
 func (a Auth) AddUser(add user.User) (Auth, string, bool) {
 	str, flag := a.checkUser(add)
 	if flag {
-		add.ID = a.LenA()
+		add.ID = a.LenUsers() + 1
 		a.data = append(a.data, add)
 		return a, "ok", true
 	}
@@ -53,7 +53,7 @@ func (auth Auth) checkUser(add user.User) (string, bool) {
 	return str, true
 }
 
-func (auth Auth) LenA() int {
+func (auth Auth) LenUsers() int {
 	//TODO будет с SQL вообще не обязательно
 	return len(auth.data)
 }
@@ -92,7 +92,7 @@ func (auth Auth) authUser(log string, pas string) (user.User, bool) {
 	return user.User{}, false
 }
 
-/*func (auth Auth) getUserById(ID int) (user.User, bool) {
+func (auth Auth) GetUserById(ID int) (user.User, bool) {
 	//TODO будет с SQL
 	for _, el := range auth.data {
 		if el.ID == ID {
@@ -100,11 +100,11 @@ func (auth Auth) authUser(log string, pas string) (user.User, bool) {
 		}
 	}
 	return user.User{}, false
-}*/
+}
 
 func (auth Auth) ProfileUpdate(token string, upd user.User) (Auth, bool) {
 
-	sesio, flag := auth.getSession(token)
+	sesio, flag := auth.GetSession(token)
 	if flag == false {
 		return auth, false
 	}
@@ -113,7 +113,7 @@ func (auth Auth) ProfileUpdate(token string, upd user.User) (Auth, bool) {
 	return auth, true
 }
 
-func (auth Auth) getSession(token string) (session.Session, bool) {
+func (auth Auth) GetSession(token string) (session.Session, bool) {
 	//TODO будет с SQL
 	for _, el := range auth.ses {
 		if token == el.Session_id {

@@ -1,6 +1,8 @@
 package user
 
 import (
+	"encoding/json"
+	"strconv"
 	"time"
 )
 
@@ -29,6 +31,17 @@ func (us1 User) AuthUser(log string, pas string)bool{
 		return true
 	}
 	return false
+}
+
+func (us User) ToJson()([]byte){
+	mapVar, _ := json.Marshal(map[string]string{
+		"id":         strconv.Itoa(us.ID),
+		"first_name": us.First_name,
+		"last_name":  us.Last_name,
+		"birthday":   us.Birthday.Format(time.ANSIC),
+		"email":      us.Email,
+		"created_at": us.Created_at.Format(time.ANSIC),})
+	return mapVar
 }
 
 type Lot struct {
