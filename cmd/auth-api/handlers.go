@@ -1,6 +1,8 @@
 package main
 
 import (
+	"courseproject/internal/auth"
+	"courseproject/internal/lot"
 	"courseproject/internal/user"
 	"encoding/json"
 	"github.com/go-chi/chi"
@@ -25,6 +27,8 @@ func strartListening() {
 		r.Post("/signin", signin)
 		r.Put("/users/{id}", userPut)
 		r.Get("/users/{id}", userGet)
+		r.Get("/lots", getLots)
+		r.Post("/lots", addLot)
 	})
 
 	_ = http.ListenAndServe(":5000", r)
@@ -50,8 +54,8 @@ func signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resp.Created_at = time.Now()
-		resp.Updated_at = time.Now()
+		resp.CreatedAt = time.Now()
+		resp.UpdatedAt = time.Now()
 
 		var (
 			flag   bool
@@ -99,18 +103,18 @@ func userPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var upd user.ShortUser
+	var upd user.User
 	var err error
 
-	upd.First_name = r.PostFormValue("first_name")
-	upd.Last_name = r.PostFormValue("last_name")
+	upd.FirstName = r.PostFormValue("first_name")
+	upd.LastName = r.PostFormValue("last_name")
 	upd.Birthday, err = time.Parse("2006-01-02T15:04:05-07:00", r.PostFormValue("Birthday"))
 	if err != nil {
 		http.Error(w, "can't parse time", http.StatusUnauthorized)
 		return
 	}
 
-	if upd.First_name == "" || upd.Last_name == ""{
+	if upd.FirstName == "" || upd.LastName == "" {
 		http.Error(w, "empty names", http.StatusUnauthorized)
 		return
 	}
@@ -143,7 +147,7 @@ func userGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID2 := userID
-	if userID == 0{
+	if userID == 0 {
 		userID = ses.User_id
 	}
 
@@ -154,11 +158,73 @@ func userGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userID2 == 0{
+	if userID2 == 0 {
 		_, _ = w.Write(us.ToJson(true))
-	}else{
+	} else {
 		_, _ = w.Write(us.ToJson(false))
 	}
 
+}
+
+func getLots(w http.ResponseWriter, r *http.Request) {
+
+	token := r.Header.Get("Authorization")
+
+	_, flag := data.GetSession(token)
+
+	if !flag {
+		http.Error(w, "problem with authorization", http.StatusUnauthorized)
+		return
+	}
+
+	jLots, err := data.MassLotsToJSON(data.GetAllLots())
+
+	if err != nil {
+		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
+		return
+	}
+
+	_, _ = w.Write(jLots)
+}
+
+func addLot(w http.ResponseWriter, r *http.Request) {
+
+	token := r.Header.Get("Authorization")
+
+	ses, flag := data.GetSession(token)
+
+	if !flag {
+		http.Error(w, "problem with authorization", http.StatusUnauthorized)
+		return
+	}
+
+	var resp lot.LotTCU
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't readALL"})
+		_, _ = w.Write([]byte(mapVar))
+		return
+	}
+
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
+		_, _ = w.Write([]byte(mapVar))
+		return
+	}
+	lts := resp.Generate()
+
+	lts.CreatorID = ses.User_id
+	lts.ID = data.LenLots() + 1
+
+	l, err := json.Marshal(auth.ToJsonLot(data, lts))
+	if err != nil {
+		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
+		return
+	}
+	_, _ = w.Write(l)
 
 }
