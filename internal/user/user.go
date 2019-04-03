@@ -15,11 +15,13 @@ type User struct {
 	Updated_at time.Time //`json:"updated_at"`
 }
 
-func (us1 User) CheckUser(us2 User)bool{
+var em string = "email already exists"
+
+func (us1 User) CheckUser(us2 User)(string , bool){
 	if us1.Email == us2.Email {
-		return true
+		return em, true
 	}
-	return false
+	return "", false
 }
 
 func (us1 User) AuthUser(log string, pas string)bool{

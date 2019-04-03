@@ -17,7 +17,7 @@ type Auth struct {
 func genToken() string {
 	size := 10
 
-	rb := make([]byte,size)
+	rb := make([]byte, size)
 	_, err := rand.Read(rb)
 
 	if err != nil {
@@ -28,23 +28,29 @@ func genToken() string {
 	return rs
 }
 
-func (auth Auth) AddUser(add user.User) (Auth, bool) {
-	if auth.checkUser(add) {
-		add.ID = auth.LenA()
-		auth.data = append(auth.data, add)
-		return auth, true
+func (a Auth) AddUser(add user.User) (Auth, string, bool) {
+	str, flag := a.checkUser(add)
+	if flag {
+		add.ID = a.LenA()
+		a.data = append(a.data, add)
+		return a, "ok", true
 	}
-	return auth, false
+	return a, str, false
 }
 
-func (auth Auth) checkUser(add user.User) bool {
+func (auth Auth) checkUser(add user.User) (string, bool) {
 	//TODO будет с SQL
+	var (
+		str string
+		fl  bool
+	)
 	for _, el := range auth.data {
-		if add.CheckUser(el) {
-			return false
+		str, fl = add.CheckUser(el)
+		if fl {
+			return str, false
 		}
 	}
-	return true
+	return str, true
 }
 
 func (auth Auth) LenA() int {
@@ -52,12 +58,12 @@ func (auth Auth) LenA() int {
 	return len(auth.data)
 }
 
-func (auth Auth) CreateSession(log string, pas string) (Auth, string, bool) {
+func (auth Auth) CreateSession(log string, pas string) (Auth, string, string) {
 
 	us, flag := auth.authUser(log, pas)
 
 	if flag == false {
-		return auth, "tokenNotSafety", false
+		return auth, "tokenNotSafety", "invalid email or password"
 	}
 
 	valid := time.Duration(5 * time.Hour)
@@ -73,7 +79,7 @@ func (auth Auth) CreateSession(log string, pas string) (Auth, string, bool) {
 
 	auth.ses = append(auth.ses, sesio)
 
-	return auth, token, true
+	return auth, token, ""
 }
 
 func (auth Auth) authUser(log string, pas string) (user.User, bool) {
@@ -96,10 +102,10 @@ func (auth Auth) authUser(log string, pas string) (user.User, bool) {
 	return user.User{}, false
 }*/
 
-func (auth Auth) ProfileUpdate(token string, upd user.User)(Auth, bool) {
+func (auth Auth) ProfileUpdate(token string, upd user.User) (Auth, bool) {
 
 	sesio, flag := auth.getSession(token)
-	if flag == false{
+	if flag == false {
 		return auth, false
 	}
 
@@ -120,10 +126,10 @@ func (auth Auth) getSession(token string) (session.Session, bool) {
 	return session.Session{}, false
 }
 
-func (auth Auth) changeUser(id int, upd user.User){
+func (auth Auth) changeUser(id int, upd user.User) {
 	//TODO будет с SQL
-	for i := range auth.data{
-		if auth.data[i].ID == id{
+	for i := range auth.data {
+		if auth.data[i].ID == id {
 			auth.data[i].Updated_at = time.Now()
 			auth.data[i].Birthday = upd.Birthday
 			auth.data[i].Last_name = upd.Last_name

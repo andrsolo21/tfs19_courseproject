@@ -29,31 +29,34 @@ func strartListening() {
 	http.ListenAndServe(":5000", r)
 }
 
-func signup(w http.ResponseWriter, r *http.Request)  {
+func signup(w http.ResponseWriter, r *http.Request) {
 
 	var resp user.User
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		//fmt.Fprintf(w, "err %q\n", err, err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "can't readAll", http.StatusBadRequest)
+		return
 	} else {
 		err = json.Unmarshal(body, &resp)
 		if err != nil {
-			fmt.Println(w, "can't unmarshal: ", err.Error())
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "can't unmarshal", http.StatusBadRequest)
+			return
 		}
 
 		resp.Created_at = time.Now()
 		resp.Updated_at = time.Now()
 
-		var flag bool
-		data, flag = data.AddUser(resp)
+		var (
+			flag   bool
+			errStr string
+		)
+		data, errStr, flag = data.AddUser(resp)
 
-		if flag == false {
-			w.Header().Add("X-MY-added", "false")
-		} else {
-			w.Header().Add("X-MY-added", "true")
+		if !flag {
+			http.Error(w, errStr, http.StatusConflict)
+			return
 		}
 	}
 
@@ -61,20 +64,19 @@ func signup(w http.ResponseWriter, r *http.Request)  {
 
 func signin(w http.ResponseWriter, r *http.Request) {
 
-	pas := r.PostFormValue("pas")
-	log := r.PostFormValue("log")
+	var token , errStr string
 
-	var token string
-	var flag bool
+	data, token, errStr = data.CreateSession(r.PostFormValue("email"), r.PostFormValue("password"))
 
-	data, token, flag = data.CreateSession(log, pas)
-
-	if flag {
-		w.Header().Add("Authorization", token)
-		w.Header().Add("X-MY-added", "true")
+	if errStr == "" {
+		mapVar2, _ := json.Marshal(map[string]string{"access_token": token, "token_type": "bearer"})
+		w.Write([]byte(mapVar2))
 
 	} else {
-		w.Header().Add("X-MY-added", "false")
+
+		http.Error(w, errStr, http.StatusUnauthorized)
+		//w.Write([]byte())
+		return
 	}
 }
 
