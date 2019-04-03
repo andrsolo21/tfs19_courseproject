@@ -102,17 +102,6 @@ func (auth Auth) GetUserById(ID int) (user.User, bool) {
 	return user.User{}, false
 }
 
-func (auth Auth) ProfileUpdate(token string, upd user.User) (Auth, bool) {
-
-	sesio, flag := auth.GetSession(token)
-	if flag == false {
-		return auth, false
-	}
-
-	auth.changeUser(sesio.User_id, upd)
-	return auth, true
-}
-
 func (auth Auth) GetSession(token string) (session.Session, bool) {
 	//TODO будет с SQL
 	for _, el := range auth.ses {
@@ -126,7 +115,7 @@ func (auth Auth) GetSession(token string) (session.Session, bool) {
 	return session.Session{}, false
 }
 
-func (auth Auth) changeUser(id int, upd user.User) {
+func (auth Auth) ChangeUser(id int, upd user.User)user.User {
 	//TODO будет с SQL
 	for i := range auth.data {
 		if auth.data[i].ID == id {
@@ -134,7 +123,8 @@ func (auth Auth) changeUser(id int, upd user.User) {
 			auth.data[i].Birthday = upd.Birthday
 			auth.data[i].Last_name = upd.Last_name
 			auth.data[i].First_name = upd.First_name
-			return
+			return auth.data[i]
 		}
 	}
+	return user.User{}
 }

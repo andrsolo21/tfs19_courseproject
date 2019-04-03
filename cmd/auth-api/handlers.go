@@ -3,7 +3,6 @@ package main
 import (
 	"courseproject/internal/user"
 	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -24,7 +23,7 @@ func strartListening() {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", signup)
 		r.Post("/signin", signin)
-		r.Put("/users/{id}", users0)
+		r.Put("/users/{id}", userPut)
 		r.Get("/users/{id}", userGet)
 	})
 
@@ -90,32 +89,35 @@ func signin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func users0(w http.ResponseWriter, r *http.Request) {
-
-	var resp user.User
-	var err error
-
-	resp.First_name = r.PostFormValue("first_name")
-	resp.Last_name = r.PostFormValue("last_name")
-	resp.Birthday, err = time.Parse("2006-01-02T15:04:05-07:00", r.PostFormValue("Birthday"))
-	if err != nil {
-		fmt.Println(w, "can't parse: ", err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-	}
+func userPut(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	var flag bool
-	data, flag = data.ProfileUpdate(token, resp)
-
-	if flag {
-		w.Header().Add("X-MY-added", "true")
-	} else {
-		w.Header().Add("X-MY-added", "false")
+	sesio, flag := data.GetSession(token)
+	if !flag {
+		http.Error(w, "problem with authorization", http.StatusUnauthorized)
+		return
 	}
 
-	//fmt.Fprintln(w, "otv", flag)
+	var upd user.User
+	var err error
 
+	upd.First_name = r.PostFormValue("first_name")
+	upd.Last_name = r.PostFormValue("last_name")
+	upd.Birthday, err = time.Parse("2006-01-02T15:04:05-07:00", r.PostFormValue("Birthday"))
+	if err != nil {
+		http.Error(w, "can't parse time", http.StatusUnauthorized)
+		return
+	}
+
+	if upd.First_name == "" || upd.Last_name == ""{
+		http.Error(w, "empty names", http.StatusUnauthorized)
+		return
+	}
+
+	us := data.ChangeUser(sesio.User_id, upd)
+
+	_, _ = w.Write(us.ToJson())
 }
 
 func userGet(w http.ResponseWriter, r *http.Request) {
