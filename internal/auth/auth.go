@@ -1,11 +1,13 @@
 package auth
 
 import (
+	"courseproject/internal/database"
 	"courseproject/internal/lot"
 	"courseproject/internal/session"
 	"courseproject/internal/user"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -31,31 +33,33 @@ func genToken() string {
 	return rs
 }
 
-func (a Auth) AddUser(add user.User) (Auth, string, bool) {
-	str, flag := a.checkUser(add)
+func AddUser(add storages.UserDB, data storages.DataB) (err error) {
+
+	str, flag := checkUser(add, data)
+
 	if flag {
-		//add.ID = a.LenUsers() + 1
-		//a.data = append(a.data, add)
+		add.CreatedAt = time.Now()
+		add.UpdatedAt = time.Now()
 
+		err := data.AddUser(add)
 
-
-		return a, "ok", true
+		return err
 	}
-	return a, str, false
+	return errors.New(str)
 }
 
-func (auth Auth) checkUser(add user.User) (string, bool) {
+func checkUser(add storages.UserDB, data storages.DataB) (string, bool) {
 	//TODO будет с SQL
 	var (
 		str string
-		fl  bool
+		//fl  bool
 	)
-	for _, el := range auth.data {
+	/*for _, el := range auth.data {
 		str, fl = add.CheckUser(el)
 		if fl {
 			return str, false
 		}
-	}
+	}*/
 	return str, true
 }
 
@@ -78,13 +82,13 @@ func (auth Auth) ChangeUser(id int, upd user.User) user.User {
 	return user.User{}
 }
 
-func (auth Auth) authUser(log string, pas string) (user.User, bool) {
+func authUser(log string, pas string) (user.User, bool) {
 	//TODO будет с SQL
-	for _, el := range auth.data {
+	/*for _, el := range auth.data {
 		if el.AuthUser(log, pas) {
 			return el, true
 		}
-	}
+	}*/
 	return user.User{}, false
 }
 
@@ -113,28 +117,21 @@ func (auth Auth) GetSession(token string) (session.Session, bool) {
 	return session.Session{}, false
 }
 
-func (auth Auth) CreateSession(log string, pas string) (Auth, string, string) {
+func CreateSession(log string, pas string, data storages.DataB) (string, error) {
 
-	us, flag := auth.authUser(log, pas)
+	us, flag := authUser(log, pas)
 
 	if flag == false {
-		return auth, "tokenNotSafety", "invalid email or password"
+		return "tokenNotSafety", errors.New("invalid email or password")
 	}
-
-	valid := time.Duration(5 * time.Hour)
 
 	token := genToken()
 
-	sesio := session.Session{
-		Session_id:  token,
-		User_id:     us.ID,
-		Created_at:  time.Now(),
-		Valid_until: time.Now().Add(valid),
-	}
+	sesio := session.CreateSession(token, us.ID)
 
-	auth.ses = append(auth.ses, sesio)
+	err := data.AddSession(sesio)
 
-	return auth, token, ""
+	return token, err
 }
 
 //Lots
@@ -143,7 +140,7 @@ func (a Auth) GetMassLots(id int) []lot.Lot {
 	var lts []lot.Lot
 
 	for _, l := range a.lots {
-		if l.CreatorID == id{
+		if l.CreatorID == id {
 			lts = append(lts, l)
 		}
 	}
@@ -155,10 +152,10 @@ func (a Auth) GetAllLots() []lot.Lot {
 	return a.lots
 }
 
-func (a Auth) MassLotsToJSON(lots []lot.Lot) ([]byte, error){
+func (a Auth) MassLotsToJSON(lots []lot.Lot) ([]byte, error) {
 	var out []lot.LotForJSON
-	for _, l := range(lots){
-		out = append(out, ToJsonLot(a,l))
+	for _, l := range (lots) {
+		out = append(out, ToJsonLot(a, l))
 	}
 	return json.Marshal(out)
 }

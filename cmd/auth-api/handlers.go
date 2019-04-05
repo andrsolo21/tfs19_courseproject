@@ -7,49 +7,19 @@ import (
 	"courseproject/internal/user"
 	"encoding/json"
 	"github.com/go-chi/chi"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-type rout struct{
-	storages.DataB
+type rout struct {
+	db storages.DataB
 }
 
-func strartListening() {
+func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 
-	r := chi.NewRouter()
-
-	logger := logrus.New()
-	logger.Formatter = &logrus.JSONFormatter{}
-	//r.Use(NewStructuredLogger(logger))
-
-	var data2 rout
-
-	d, err := storages.NewDataB()
-	if err != nil{
-		log.Fatal(err)
-	}
-	data2.DB = d.DB
-
-	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/signup", data2.signup)
-		r.Post("/signin", data2.signin)
-		r.Put("/users/{id}", data2.userPut)
-		r.Get("/users/{id}", data2.userGet)
-		r.Get("/lots", data2.getLots)
-		r.Post("/lots", data2.addLot)
-	})
-
-	_ = http.ListenAndServe(":5000", r)
-}
-
-func (db rout) signup(w http.ResponseWriter, r *http.Request) {
-
-	var resp user.User
+	var resp storages.UserDB
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -58,59 +28,44 @@ func (db rout) signup(w http.ResponseWriter, r *http.Request) {
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
 		_, _ = w.Write([]byte(mapVar))
 		return
-	} else {
-		err = json.Unmarshal(body, &resp)
-		if err != nil {
-			http.Error(w, "", http.StatusBadRequest)
-			mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
-			_, _ = w.Write([]byte(mapVar))
-			return
-		}
-
-		resp.CreatedAt = time.Now()
-		resp.UpdatedAt = time.Now()
-
-		var (
-			flag   bool
-			errStr string
-		)
-
-		user.AddUser(resp, db.DB)
-
-
-
-
-
-		data, errStr, flag = data.AddUser(resp)
-
-		if !flag {
-			http.Error(w, "", http.StatusConflict)
-			mapVar, _ := json.Marshal(map[string]string{"error": errStr})
-			_, _ = w.Write([]byte(mapVar))
-			return
-		}
-
-		w.WriteHeader(http.StatusCreated)
 	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
+		_, _ = w.Write([]byte(mapVar))
+		return
+	}
+
+	err = auth.AddUser(resp, dbr.db)
+
+	if err != nil {
+		http.Error(w, "", http.StatusConflict)
+		mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
+		_, _ = w.Write([]byte(mapVar))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 
 }
 
-func (db rout) signin(w http.ResponseWriter, r *http.Request) {
+func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 
-	var token, errStr string
+	var token string
 
-	data, token, errStr = data.CreateSession(r.PostFormValue("email"), r.PostFormValue("password"))
+	token, err := auth.CreateSession(r.PostFormValue("email"), r.PostFormValue("password"), dbr.db)
 
-	if errStr == "" {
+	if err == nil {
 		mapVar, _ := json.Marshal(map[string]string{"access_token": token, "token_type": "bearer"})
 		_, _ = w.Write([]byte(mapVar))
-
-	} else {
-
-		http.Error(w, "", http.StatusUnauthorized)
-		mapVar, _ := json.Marshal(map[string]string{"error": errStr})
-		_, _ = w.Write([]byte(mapVar))
+		return
 	}
+
+	http.Error(w, "", http.StatusUnauthorized)
+	mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
+	_, _ = w.Write([]byte(mapVar))
+
 }
 
 func (db rout) userPut(w http.ResponseWriter, r *http.Request) {

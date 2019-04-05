@@ -9,3 +9,14 @@ type Session struct {
 	Valid_until time.Time `json:"valid_until"`
 }
 
+func CreateSession(token string, id int )Session{
+
+	valid := time.Duration(5 * time.Hour)
+
+	return Session{
+		Session_id:  token,
+		User_id:     id,
+		Created_at:  time.Now(),
+		Valid_until: time.Now().Add(valid),
+	}
+}
