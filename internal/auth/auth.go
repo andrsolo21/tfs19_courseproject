@@ -34,8 +34,11 @@ func genToken() string {
 func (a Auth) AddUser(add user.User) (Auth, string, bool) {
 	str, flag := a.checkUser(add)
 	if flag {
-		add.ID = a.LenUsers() + 1
-		a.data = append(a.data, add)
+		//add.ID = a.LenUsers() + 1
+		//a.data = append(a.data, add)
+
+
+
 		return a, "ok", true
 	}
 	return a, str, false

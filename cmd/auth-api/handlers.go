@@ -2,16 +2,22 @@ package main
 
 import (
 	"courseproject/internal/auth"
+	"courseproject/internal/database"
 	"courseproject/internal/lot"
 	"courseproject/internal/user"
 	"encoding/json"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
 )
+
+type rout struct{
+	storages.DataB
+}
 
 func strartListening() {
 
@@ -19,22 +25,29 @@ func strartListening() {
 
 	logger := logrus.New()
 	logger.Formatter = &logrus.JSONFormatter{}
-
 	//r.Use(NewStructuredLogger(logger))
 
+	var data2 rout
+
+	d, err := storages.NewDataB()
+	if err != nil{
+		log.Fatal(err)
+	}
+	data2.DB = d.DB
+
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Post("/signup", signup)
-		r.Post("/signin", signin)
-		r.Put("/users/{id}", userPut)
-		r.Get("/users/{id}", userGet)
-		r.Get("/lots", getLots)
-		r.Post("/lots", addLot)
+		r.Post("/signup", data2.signup)
+		r.Post("/signin", data2.signin)
+		r.Put("/users/{id}", data2.userPut)
+		r.Get("/users/{id}", data2.userGet)
+		r.Get("/lots", data2.getLots)
+		r.Post("/lots", data2.addLot)
 	})
 
 	_ = http.ListenAndServe(":5000", r)
 }
 
-func signup(w http.ResponseWriter, r *http.Request) {
+func (db rout) signup(w http.ResponseWriter, r *http.Request) {
 
 	var resp user.User
 
@@ -61,6 +74,13 @@ func signup(w http.ResponseWriter, r *http.Request) {
 			flag   bool
 			errStr string
 		)
+
+		user.AddUser(resp, db.DB)
+
+
+
+
+
 		data, errStr, flag = data.AddUser(resp)
 
 		if !flag {
@@ -75,7 +95,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func signin(w http.ResponseWriter, r *http.Request) {
+func (db rout) signin(w http.ResponseWriter, r *http.Request) {
 
 	var token, errStr string
 
@@ -93,7 +113,7 @@ func signin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func userPut(w http.ResponseWriter, r *http.Request) {
+func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
@@ -124,7 +144,7 @@ func userPut(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(us.ToJson(true))
 }
 
-func userGet(w http.ResponseWriter, r *http.Request) {
+func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
@@ -166,7 +186,7 @@ func userGet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getLots(w http.ResponseWriter, r *http.Request) {
+func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
@@ -187,7 +207,7 @@ func getLots(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(jLots)
 }
 
-func addLot(w http.ResponseWriter, r *http.Request) {
+func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 

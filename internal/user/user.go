@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"github.com/jinzhu/gorm"
 	"strconv"
 	"time"
 )
@@ -24,6 +25,10 @@ type ShortUser struct {
 }
 
 var em string = "email already exists"
+
+func AddUser(us User, bd *gorm.DB){
+
+}
 
 func (us1 User) CheckUser(us2 User) (string, bool) {
 	if us1.Email == us2.Email {
