@@ -1,6 +1,7 @@
 package storages
 
 import (
+	"courseproject/internal/lotS"
 	"courseproject/internal/sessionS"
 	"courseproject/internal/userS"
 	"errors"
@@ -43,7 +44,7 @@ func NewDataB() (d DataB, err error) {
 
 func (db DataB) CreateTables() DataB {
 
-	db.DB = db.DB.AutoMigrate(&userS.User{}, &sessionS.Session{})
+	db.DB = db.DB.AutoMigrate(&userS.User{}, &sessionS.Session{}, &lotS.Lot{})
 
 	//db.DB = db.DB.CreateTable(&userS.ShortUser{})
 
@@ -138,4 +139,13 @@ func (db DataB) CountUsers()int{
 	db.DB.Find(&users).Count(&count)
 
 	return count
+}
+
+func (db DataB) AddLot(l lotS.Lot) error{
+	db.DB = db.DB.Create(&l)
+
+	if err := db.DB.Error; err != nil {
+		return err
+	}
+	return nil
 }

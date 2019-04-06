@@ -2,7 +2,7 @@ package auth
 
 import (
 	"courseproject/internal/database"
-	"courseproject/internal/lot"
+	"courseproject/internal/lotS"
 	"courseproject/internal/session"
 	"courseproject/internal/user"
 	"courseproject/internal/userS"
@@ -102,11 +102,11 @@ func (a Auth) LenLots() int {
 	return len(a.lots)
 }*/
 
-func ToJsonLot(l lot.Lot, db storages.DataB) lot.LotForJSON {
+func ToJsonLot(l lotS.Lot, db storages.DataB) lotS.LotForJSON {
 	user1, _ := db.GetUserByID(l.CreatorID)
 	user2, _ := db.GetUserByID(l.BuyerID)
 
-	return lot.LotForJSON{
+	return lotS.LotForJSON{
 		ID:          l.ID,
 		Title:       l.Title,
 		Description: l.Description,

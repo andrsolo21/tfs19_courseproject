@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-
-
 func CreateSession(token string, id int) sessionS.Session {
 
 	valid := time.Duration(5 * time.Hour)

@@ -3,6 +3,8 @@ package main
 import (
 	"courseproject/internal/auth"
 	"courseproject/internal/database"
+	"courseproject/internal/lot"
+	"courseproject/internal/lotS"
 	"courseproject/internal/user"
 	"courseproject/internal/userS"
 	"encoding/json"
@@ -80,7 +82,6 @@ func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	var upd userS.User
 
-
 	switch r.Header.Get("Content-Type") {
 	case "multipart/form-data":
 		upd.FirstName = r.PostFormValue("first_name")
@@ -137,8 +138,8 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if data.LenUsers() < userID {
-		http.Error(w, "user for the given ID not found", http.StatusNotFound)
+	if db.db.CountUsers() < userID {
+		http.Error(w, "user for the given ID is not found", http.StatusNotFound)
 		return
 	}
 
@@ -147,9 +148,9 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 		userID = ses.User_id
 	}
 
-	us, flag := data.GetUserById(userID)
+	us, err := db.db.GetUserByID(userID)
 
-	if !flag {
+	if err != nil {
 		http.Error(w, "user for the given ID not found", http.StatusNotFound)
 		return
 	}
@@ -161,6 +162,7 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
 /*
 func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
 
@@ -181,20 +183,20 @@ func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _ = w.Write(jLots)
-}
+}*/
 
 func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	ses, flag := data.GetSession(token)
+	ses, err := db.db.GetSesByToken(token)
 
-	if !flag {
-		http.Error(w, "problem with authorization", http.StatusUnauthorized)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	var resp lot.LotTCU
+	var resp lotS.LotTCU
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -211,12 +213,20 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(mapVar))
 		return
 	}
-	lts := resp.Generate()
+	lts := lot.Generate(resp)
 
 	lts.CreatorID = ses.User_id
-	lts.ID = data.LenLots() + 1
 
-	l, err := json.Marshal(auth.ToJsonLot(data, lts))
+	err = db.db.AddLot(lts)
+
+	if err != nil {
+		http.Error(w, "", http.StatusConflict)
+		mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
+		_, _ = w.Write([]byte(mapVar))
+		return
+	}
+
+	l, err := json.Marshal(auth.ToJsonLot(lts, db.db))
 	if err != nil {
 		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
 		return
@@ -224,4 +234,3 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(l)
 
 }
-*/

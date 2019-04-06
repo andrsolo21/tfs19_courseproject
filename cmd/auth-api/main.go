@@ -33,9 +33,9 @@ func main() {
 		r.Post("/signup", data2.signup)
 		r.Post("/signin", data2.signin)
 		r.Put("/users/{id}", data2.userPut)
-		//r.Get("/users/{id}", data2.userGet)
+		r.Get("/users/{id}", data2.userGet)
 		//r.Get("/lots", data2.getLots)
-		//r.Post("/lots", data2.addLot)
+		r.Post("/lots", data2.addLot)
 	})
 
 	_ = http.ListenAndServe(":5000", r)
