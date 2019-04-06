@@ -3,7 +3,6 @@ package main
 import (
 	"courseproject/internal/auth"
 	"courseproject/internal/database"
-	"courseproject/internal/lot"
 	"courseproject/internal/user"
 	"courseproject/internal/userS"
 	"encoding/json"
@@ -73,29 +72,51 @@ func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	sesio, flag := data.GetSession(token)
-	if !flag {
-		http.Error(w, "problem with authorization", http.StatusUnauthorized)
+	sesio, err := db.db.GetSesByToken(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	var upd userS.User
-	var err error
 
-	upd.FirstName = r.PostFormValue("first_name")
-	upd.LastName = r.PostFormValue("last_name")
-	upd.Birthday, err = time.Parse("2006-01-02T15:04:05-07:00", r.PostFormValue("Birthday"))
-	if err != nil {
-		http.Error(w, "can't parse time", http.StatusUnauthorized)
-		return
+
+	switch r.Header.Get("Content-Type") {
+	case "multipart/form-data":
+		upd.FirstName = r.PostFormValue("first_name")
+		upd.LastName = r.PostFormValue("last_name")
+		upd.Birthday, err = time.Parse("2006-01-02T15:04:05-07:00", r.PostFormValue("Birthday"))
+
+		if err != nil {
+			http.Error(w, "can't parse time", http.StatusUnauthorized)
+			return
+		}
+
+		if upd.FirstName == "" || upd.LastName == "" {
+			http.Error(w, "empty names", http.StatusUnauthorized)
+			return
+		}
+
+	case "application/json":
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			//fmt.Fprintf(w, "err %q\n", err, err.Error())
+			http.Error(w, "", http.StatusBadRequest)
+			mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
+			_, _ = w.Write([]byte(mapVar))
+			return
+		}
+		err = json.Unmarshal(body, &upd)
+		if err != nil {
+			http.Error(w, "", http.StatusBadRequest)
+			mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
+			_, _ = w.Write([]byte(mapVar))
+			return
+		}
+
 	}
 
-	if upd.FirstName == "" || upd.LastName == "" {
-		http.Error(w, "empty names", http.StatusUnauthorized)
-		return
-	}
-
-	us := data.ChangeUser(sesio.User_id, upd)
+	us := auth.ChangeUser(sesio.User_id, upd, db.db)
 
 	_, _ = w.Write(user.ToJson(true, us))
 }
@@ -104,16 +125,15 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	ses, flag := data.GetSession(token)
-
-	if !flag {
-		http.Error(w, "problem with authorization", http.StatusUnauthorized)
+	ses, err := db.db.GetSesByToken(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		http.Error(w, "can't find user by ID", http.StatusBadRequest)
+		http.Error(w, "can't read user's ID", http.StatusBadRequest)
 		return
 	}
 
@@ -141,7 +161,7 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
+/*
 func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
@@ -204,3 +224,4 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(l)
 
 }
+*/

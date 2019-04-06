@@ -4,22 +4,14 @@ import (
 	"courseproject/internal/database"
 	"courseproject/internal/lot"
 	"courseproject/internal/session"
-	"courseproject/internal/sessionS"
 	"courseproject/internal/user"
 	"courseproject/internal/userS"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
 	"time"
 )
-
-type Auth struct {
-	data []userS.User
-	ses  []sessionS.Session
-	lots []lot.Lot
-}
 
 func genToken() string {
 	size := 10
@@ -59,44 +51,16 @@ func checkUser(add userS.User, db storages.DataB) (err error) {
 	return nil
 }
 
-/*func (auth Auth) LenUsers() int {
-	//TODO будет с SQL вообще не обязательно
-	return len(auth.data)
-}*/
+func ChangeUser(id int, upd userS.User, db storages.DataB) userS.User {
 
-func (auth Auth) ChangeUser(id int, upd userS.User) userS.User {
-	//TODO будет с SQL
-	for i := range auth.data {
-		if auth.data[i].ID == id {
-			auth.data[i].UpdatedAt = time.Now()
-			auth.data[i].Birthday = upd.Birthday
-			auth.data[i].LastName = upd.LastName
-			auth.data[i].FirstName = upd.FirstName
-			return auth.data[i]
-		}
-	}
-	return userS.User{}
+	return db.ChangeUser(upd, id)
 }
-
-func authUser(log string, pas string, db storages.DataB) (userS.User, bool) {
-
-	var el userS.User
-
-	db.DB.Where("email = ? AND password = ?", log, pas).First(&el)
-
-	if el.ID != 0 {
-		return el, true
-	}
-	return userS.User{}, false
-}
-
-//Sessions
 
 func CreateSession(log string, pas string, data storages.DataB) (string, error) {
 
-	us, flag := authUser(log, pas, data)
+	us, err := data.GetUserByEmPass(log, pas)
 
-	if flag == false {
+	if err != nil {
 		return "tokenNotSafety", errors.New("invalid email or password")
 	}
 
@@ -104,14 +68,12 @@ func CreateSession(log string, pas string, data storages.DataB) (string, error) 
 
 	sesio := session.CreateSession(token, us.ID)
 
-	err := data.AddSession(sesio)
+	err = data.AddSession(sesio)
 
 	return token, err
 }
 
-//Lots
-
-func (a Auth) GetMassLots(id int) []lot.Lot {
+/*func (a Auth) GetMassLots(id int) []lot.Lot {
 	var lts []lot.Lot
 
 	for _, l := range a.lots {
@@ -135,14 +97,14 @@ func MassLotsToJSON(lots []lot.Lot, db storages.DataB) ([]byte, error) {
 	return json.Marshal(out)
 }
 
-/*func (a Auth) LenLots() int {
+func (a Auth) LenLots() int {
 	//TODO будет с SQL вообще не обязательно
 	return len(a.lots)
 }*/
 
 func ToJsonLot(l lot.Lot, db storages.DataB) lot.LotForJSON {
-	user1 := db.GetUserByID(l.CreatorID)
-	user2 := db.GetUserByID(l.BuyerID)
+	user1, _ := db.GetUserByID(l.CreatorID)
+	user2, _ := db.GetUserByID(l.BuyerID)
 
 	return lot.LotForJSON{
 		ID:          l.ID,

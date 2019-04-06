@@ -6,12 +6,19 @@ import (
 	"errors"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"time"
 )
 
 type INTT interface {
-	AddUser(use interface{}) error
-	AddSession(use interface{}) error
+	AddUser(use userS.User) error
+	AddSession(use sessionS.Session) error
 	CreateTables() DataB
+	CheckEmail(email string) bool
+	GetUserByID(id int) (userS.User, error)
+	GetSesByToken(id int) (sessionS.Session, error)
+	GetUserByEmPass(em string, pass string)(userS.User, error)
+	ChangeUser(us userS.User, id int)userS.User
+	CountUsers()int
 }
 
 type DataB struct {
@@ -71,22 +78,64 @@ func (db DataB) CheckEmail(email string) bool {
 	return true
 }
 
-func (db DataB) GetUserByID(id int) (userS.User) {
+func (db DataB) GetUserByID(id int) (userS.User, error) {
 	var el userS.User
 
 	db.DB.Where("ID = ?", id).First(&el)
 
-	return el
+	if el.ID == 0{
+		return el, errors.New("this user dosen't exist")
+	}
+
+	return el, nil
 }
 
-func (db DataB) GetSesByToken(id int) (sessionS.Session, error) {
+func (db DataB) GetSesByToken(token string) (sessionS.Session, error) {
 	var el sessionS.Session
 
-	db.DB.Where("session_id = ?", id).First(&el)
+	db.DB.Where("session_id = ?", token).First(&el)
 
 	if el.User_id == 0{
 		return el, errors.New("this sesion dosen't exist")
 	}
 
+	if el.Valid_until.Before(time.Now()){
+		return el, errors.New("expiration date of token is out")
+	}
+
 	return el, nil
+}
+
+func (db DataB) GetUserByEmPass(em string, pass string)(userS.User, error) {
+	var el userS.User
+
+	db.DB.Where("email = ? AND password = ?", em, pass).First(&el)
+
+	if el.ID != 0 {
+		return el, nil
+	}
+	return userS.User{}, errors.New("this user is not exist")
+}
+
+func (db DataB) ChangeUser(us userS.User, id int)userS.User{
+
+	var el userS.User
+
+	db.DB.Where(userS.User{ID : id}).Assign(userS.User{
+		FirstName:us.FirstName,
+		LastName:us.LastName,
+		Birthday:us.Birthday,
+		UpdatedAt:time.Now(),
+	}).FirstOrCreate(&el)
+
+	return el
+}
+
+func (db DataB) CountUsers()int{
+
+	var count int
+	var users []userS.User
+	db.DB.Find(&users).Count(&count)
+
+	return count
 }

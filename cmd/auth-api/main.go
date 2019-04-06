@@ -1,15 +1,12 @@
 package main
 
 import (
-	"courseproject/internal/auth"
 	storages "courseproject/internal/database"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 )
-
-var data auth.Auth
 
 func main() {
 
@@ -36,9 +33,9 @@ func main() {
 		r.Post("/signup", data2.signup)
 		r.Post("/signin", data2.signin)
 		r.Put("/users/{id}", data2.userPut)
-		r.Get("/users/{id}", data2.userGet)
-		r.Get("/lots", data2.getLots)
-		r.Post("/lots", data2.addLot)
+		//r.Get("/users/{id}", data2.userGet)
+		//r.Get("/lots", data2.getLots)
+		//r.Post("/lots", data2.addLot)
 	})
 
 	_ = http.ListenAndServe(":5000", r)
