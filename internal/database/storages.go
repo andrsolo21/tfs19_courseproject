@@ -1,28 +1,21 @@
 package storages
 
 import (
+	"courseproject/internal/sessionS"
+	"courseproject/internal/userS"
+	"errors"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"time"
 )
 
 type INTT interface {
-	AddUser(use interface{}) (error)
-	AddSession(use interface{}) (error)
+	AddUser(use interface{}) error
+	AddSession(use interface{}) error
+	CreateTables() DataB
 }
 
 type DataB struct {
 	DB *gorm.DB
-}
-
-type UserDB struct {
-	gorm.Model
-
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	Birthday  time.Time `json:"birthday"`
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
 }
 
 func NewDataB() (d DataB, err error) {
@@ -38,12 +31,28 @@ func NewDataB() (d DataB, err error) {
 		fmt.Printf("can't connect to db: %s", err)
 	}*/
 
-	database.CreateTable(&UserDB{})
-
 	return DataB{DB: database}, err
 }
 
-func (db DataB) AddUser(use interface{}) (error) {
+func (db DataB) CreateTables() DataB {
+
+	db.DB = db.DB.AutoMigrate(&userS.User{}, &sessionS.Session{})
+
+	//db.DB = db.DB.CreateTable(&userS.ShortUser{})
+
+	return db
+}
+
+func (db DataB) AddUser(use userS.User) error {
+	db.DB = db.DB.Create(&use)
+
+	if err := db.DB.Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db DataB) AddSession(use sessionS.Session) error {
 	db.DB = db.DB.Create(&use)
 	if err := db.DB.Error; err != nil {
 		return err
@@ -51,10 +60,33 @@ func (db DataB) AddUser(use interface{}) (error) {
 	return nil
 }
 
-func (db DataB) AddSession(use interface{}) (error) {
-	db.DB = db.DB.Create(&use)
-	if err := db.DB.Error; err != nil {
-		return err
+func (db DataB) CheckEmail(email string) bool {
+	var el userS.User
+
+	db.DB.Where("email = ?", email).First(&el)
+	if el.ID == 0 {
+		return false
 	}
-	return nil
+
+	return true
+}
+
+func (db DataB) GetUserByID(id int) (userS.User) {
+	var el userS.User
+
+	db.DB.Where("ID = ?", id).First(&el)
+
+	return el
+}
+
+func (db DataB) GetSesByToken(id int) (sessionS.Session, error) {
+	var el sessionS.Session
+
+	db.DB.Where("session_id = ?", id).First(&el)
+
+	if el.User_id == 0{
+		return el, errors.New("this sesion dosen't exist")
+	}
+
+	return el, nil
 }

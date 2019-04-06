@@ -5,6 +5,7 @@ import (
 	"courseproject/internal/database"
 	"courseproject/internal/lot"
 	"courseproject/internal/user"
+	"courseproject/internal/userS"
 	"encoding/json"
 	"github.com/go-chi/chi"
 	"io/ioutil"
@@ -19,7 +20,7 @@ type rout struct {
 
 func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 
-	var resp storages.UserDB
+	var resp userS.User
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -78,7 +79,7 @@ func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var upd user.User
+	var upd userS.User
 	var err error
 
 	upd.FirstName = r.PostFormValue("first_name")
@@ -96,7 +97,7 @@ func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	us := data.ChangeUser(sesio.User_id, upd)
 
-	_, _ = w.Write(us.ToJson(true))
+	_, _ = w.Write(user.ToJson(true, us))
 }
 
 func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
@@ -134,9 +135,9 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userID2 == 0 {
-		_, _ = w.Write(us.ToJson(true))
+		_, _ = w.Write(user.ToJson(true, us))
 	} else {
-		_, _ = w.Write(us.ToJson(false))
+		_, _ = w.Write(user.ToJson(false, us))
 	}
 
 }

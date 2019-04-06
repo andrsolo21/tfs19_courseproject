@@ -13,7 +13,6 @@ var data auth.Auth
 
 func main() {
 
-
 	var err error
 
 	r := chi.NewRouter()
@@ -30,6 +29,8 @@ func main() {
 	}
 
 	defer data2.db.DB.Close()
+
+	data2.db = data2.db.CreateTables()
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", data2.signup)

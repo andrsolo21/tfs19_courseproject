@@ -4,7 +4,9 @@ import (
 	"courseproject/internal/database"
 	"courseproject/internal/lot"
 	"courseproject/internal/session"
+	"courseproject/internal/sessionS"
 	"courseproject/internal/user"
+	"courseproject/internal/userS"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -14,8 +16,8 @@ import (
 )
 
 type Auth struct {
-	data []user.User
-	ses  []session.Session
+	data []userS.User
+	ses  []sessionS.Session
 	lots []lot.Lot
 }
 
@@ -33,42 +35,36 @@ func genToken() string {
 	return rs
 }
 
-func AddUser(add storages.UserDB, data storages.DataB) (err error) {
+func AddUser(add userS.User, data storages.DataB) (err error) {
 
-	str, flag := checkUser(add, data)
+	err = checkUser(add, data)
 
-	if flag {
+	if err == nil {
 		add.CreatedAt = time.Now()
 		add.UpdatedAt = time.Now()
 
-		err := data.AddUser(add)
+		err = data.AddUser(add)
 
 		return err
 	}
-	return errors.New(str)
+	return err
 }
 
-func checkUser(add storages.UserDB, data storages.DataB) (string, bool) {
-	//TODO будет с SQL
-	var (
-		str string
-		//fl  bool
-	)
-	/*for _, el := range auth.data {
-		str, fl = add.CheckUser(el)
-		if fl {
-			return str, false
-		}
-	}*/
-	return str, true
+func checkUser(add userS.User, db storages.DataB) (err error) {
+
+	if db.CheckEmail(add.Email) {
+		return errors.New("email already exist")
+	}
+
+	return nil
 }
 
-func (auth Auth) LenUsers() int {
+/*func (auth Auth) LenUsers() int {
 	//TODO будет с SQL вообще не обязательно
 	return len(auth.data)
-}
+}*/
 
-func (auth Auth) ChangeUser(id int, upd user.User) user.User {
+func (auth Auth) ChangeUser(id int, upd userS.User) userS.User {
 	//TODO будет с SQL
 	for i := range auth.data {
 		if auth.data[i].ID == id {
@@ -79,47 +75,26 @@ func (auth Auth) ChangeUser(id int, upd user.User) user.User {
 			return auth.data[i]
 		}
 	}
-	return user.User{}
+	return userS.User{}
 }
 
-func authUser(log string, pas string) (user.User, bool) {
-	//TODO будет с SQL
-	/*for _, el := range auth.data {
-		if el.AuthUser(log, pas) {
-			return el, true
-		}
-	}*/
-	return user.User{}, false
-}
+func authUser(log string, pas string, db storages.DataB) (userS.User, bool) {
 
-func (auth Auth) GetUserById(ID int) (user.User, bool) {
-	//TODO будет с SQL
-	for _, el := range auth.data {
-		if el.ID == ID {
-			return el, true
-		}
+	var el userS.User
+
+	db.DB.Where("email = ? AND password = ?", log, pas).First(&el)
+
+	if el.ID != 0 {
+		return el, true
 	}
-	return user.User{}, false
+	return userS.User{}, false
 }
 
 //Sessions
 
-func (auth Auth) GetSession(token string) (session.Session, bool) {
-	//TODO будет с SQL
-	for _, el := range auth.ses {
-		if token == el.Session_id {
-			if time.Now().After(el.Valid_until) {
-				return session.Session{}, false
-			}
-			return el, true
-		}
-	}
-	return session.Session{}, false
-}
-
 func CreateSession(log string, pas string, data storages.DataB) (string, error) {
 
-	us, flag := authUser(log, pas)
+	us, flag := authUser(log, pas, data)
 
 	if flag == false {
 		return "tokenNotSafety", errors.New("invalid email or password")
@@ -152,22 +127,22 @@ func (a Auth) GetAllLots() []lot.Lot {
 	return a.lots
 }
 
-func (a Auth) MassLotsToJSON(lots []lot.Lot) ([]byte, error) {
+func MassLotsToJSON(lots []lot.Lot, db storages.DataB) ([]byte, error) {
 	var out []lot.LotForJSON
-	for _, l := range (lots) {
-		out = append(out, ToJsonLot(a, l))
+	for _, l := range lots {
+		out = append(out, ToJsonLot(l, db))
 	}
 	return json.Marshal(out)
 }
 
-func (a Auth) LenLots() int {
+/*func (a Auth) LenLots() int {
 	//TODO будет с SQL вообще не обязательно
 	return len(a.lots)
-}
+}*/
 
-func ToJsonLot(data Auth, l lot.Lot) lot.LotForJSON {
-	user1, _ := data.GetUserById(l.CreatorID)
-	user2, _ := data.GetUserById(l.BuyerID)
+func ToJsonLot(l lot.Lot, db storages.DataB) lot.LotForJSON {
+	user1 := db.GetUserByID(l.CreatorID)
+	user2 := db.GetUserByID(l.BuyerID)
 
 	return lot.LotForJSON{
 		ID:          l.ID,
@@ -180,7 +155,7 @@ func ToJsonLot(data Auth, l lot.Lot) lot.LotForJSON {
 		EndAt:       l.EndAt,
 		CreatedAt:   l.CreatedAt,
 		UpdatedAt:   l.UpdatedAt,
-		CreatorID:   user1.ToShort(),
-		BuyerID:     user2.ToShort(),
+		CreatorID:   user.ToShort(user1),
+		BuyerID:     user.ToShort(user2),
 	}
 }
