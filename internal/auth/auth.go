@@ -7,6 +7,7 @@ import (
 	"courseproject/internal/user"
 	"courseproject/internal/userS"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -83,20 +84,24 @@ func CreateSession(log string, pas string, data storages.DataB) (string, error) 
 	}
 
 	return lts
-}
+}*/
 
+/*
 func (a Auth) GetAllLots() []lot.Lot {
 	return a.lots
 }
+*/
 
-func MassLotsToJSON(lots []lot.Lot, db storages.DataB) ([]byte, error) {
-	var out []lot.LotForJSON
+
+func MassLotsToJSON(lots []lotS.Lot, db storages.DataB) ([]byte, error) {
+	var out []lotS.LotForJSON
 	for _, l := range lots {
 		out = append(out, ToJsonLot(l, db))
 	}
 	return json.Marshal(out)
 }
 
+/*
 func (a Auth) LenLots() int {
 	//TODO будет с SQL вообще не обязательно
 	return len(a.lots)

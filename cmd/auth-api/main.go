@@ -25,16 +25,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	defer data2.db.DB.Close()
+	defer data2.db.Db().DB.Close()
 
 	data2.db = data2.db.CreateTables()
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", data2.signup)
 		r.Post("/signin", data2.signin)
-		r.Put("/users/{id}", data2.userPut)
+
 		r.Get("/users/{id}", data2.userGet)
-		//r.Get("/lots", data2.getLots)
+		r.Put("/users/{id}", data2.userPut)
+		r.Get("/users/{id}/lots", data2.getUsersLots)
+
+		r.Get("/lots", data2.getLots)
 		r.Post("/lots", data2.addLot)
 	})
 

@@ -16,7 +16,7 @@ import (
 )
 
 type rout struct {
-	db storages.DataB
+	db storages.INTT
 }
 
 func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = auth.AddUser(resp, dbr.db)
+	err = auth.AddUser(resp, dbr.db.Db())
 
 	if err != nil {
 		http.Error(w, "", http.StatusConflict)
@@ -56,7 +56,7 @@ func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 
 	var token string
 
-	token, err := auth.CreateSession(r.PostFormValue("email"), r.PostFormValue("password"), dbr.db)
+	token, err := auth.CreateSession(r.PostFormValue("email"), r.PostFormValue("password"), dbr.db.Db())
 
 	if err == nil {
 		mapVar, _ := json.Marshal(map[string]string{"access_token": token, "token_type": "bearer"})
@@ -67,6 +67,47 @@ func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "", http.StatusUnauthorized)
 	mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
 	_, _ = w.Write([]byte(mapVar))
+
+}
+
+func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
+
+	token := r.Header.Get("Authorization")
+
+	ses, err := db.db.GetSesByToken(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		return
+	}
+
+	if db.db.CountUsers() < userID {
+		http.Error(w, "user for the given ID is not found", http.StatusNotFound)
+		return
+	}
+
+	userID2 := userID
+	if userID == 0 {
+		userID = ses.User_id
+	}
+
+	us, err := db.db.GetUserByID(userID)
+
+	if err != nil {
+		http.Error(w, "user for the given ID not found", http.StatusNotFound)
+		return
+	}
+
+	if userID2 == 0 {
+		_, _ = w.Write(user.ToJson(true, us))
+	} else {
+		_, _ = w.Write(user.ToJson(false, us))
+	}
 
 }
 
@@ -117,15 +158,13 @@ func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	us := auth.ChangeUser(sesio.User_id, upd, db.db)
+	us := auth.ChangeUser(sesio.User_id, upd, db.db.Db())
 
 	_, _ = w.Write(user.ToJson(true, us))
 }
 
-func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
-
+func (db rout) getUsersLots(w http.ResponseWriter, r *http.Request){
 	token := r.Header.Get("Authorization")
-
 	ses, err := db.db.GetSesByToken(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -138,52 +177,42 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if db.db.CountUsers() < userID {
-		http.Error(w, "user for the given ID is not found", http.StatusNotFound)
-		return
-	}
+	typ := chi.URLParam(r, "type")
 
-	userID2 := userID
-	if userID == 0 {
+	if userID == 0{
 		userID = ses.User_id
 	}
 
-	us, err := db.db.GetUserByID(userID)
+	jLots, err := auth.MassLotsToJSON(db.db.GetUsersLots(userID, typ))
 
 	if err != nil {
-		http.Error(w, "user for the given ID not found", http.StatusNotFound)
-		return
-	}
-
-	if userID2 == 0 {
-		_, _ = w.Write(user.ToJson(true, us))
-	} else {
-		_, _ = w.Write(user.ToJson(false, us))
-	}
-
-}
-
-/*
-func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
-
-	token := r.Header.Get("Authorization")
-
-	_, flag := data.GetSession(token)
-
-	if !flag {
-		http.Error(w, "problem with authorization", http.StatusUnauthorized)
-		return
-	}
-
-	jLots, err := data.MassLotsToJSON(data.GetAllLots())
-
-	if err != nil {
-		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
 	_, _ = w.Write(jLots)
-}*/
+}
+
+func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
+
+	token := r.Header.Get("Authorization")
+	_, err := db.db.GetSesByToken(token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	typ := chi.URLParam(r, "type")
+
+	jLots, err := auth.MassLotsToJSON(db.db.GetLots(typ))
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	_, _ = w.Write(jLots)
+}
 
 func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 
@@ -226,7 +255,7 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	l, err := json.Marshal(auth.ToJsonLot(lts, db.db))
+	l, err := json.Marshal(auth.ToJsonLot(lts, db.db.Db()))
 	if err != nil {
 		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
 		return
