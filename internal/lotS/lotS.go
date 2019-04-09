@@ -42,3 +42,7 @@ type LotTCU struct {
 	PriceStep   float64   `json:"price_step"`
 	EndAt       time.Time `json:"end_at"`
 }
+
+type Price struct {
+	Price float64 `json:"price"`
+}

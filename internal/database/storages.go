@@ -26,8 +26,10 @@ type INTT interface {
 	CountUsers() int
 	AddLot(l lotS.Lot) error
 	GetLots(typ string) (lots []lotS.Lot, d DataB)
-	GetUsersLots(id int, role string)(lots []lotS.Lot, d DataB)
+	GetUsersLots(id int, role string)(lots []lotS.Lot)
 	Db() DataB
+	GetLotByID(id int)(el lotS.Lot, err error)
+	SMBBuyIT(userID int, l lotS.Lot, price float64) (el lotS.Lot, err error)
 }
 
 func NewDataB() (d DataB, err error) {
@@ -169,20 +171,40 @@ func (db DataB) GetLots(typ string) (lots []lotS.Lot, d DataB) {
 	return lots, db
 }
 
-func (db DataB) GetUsersLots(id int, role string)(lots []lotS.Lot, d DataB){
+func (db DataB) GetUsersLots(id int, role string)(lots []lotS.Lot){
 
 	switch role{
 	case "":
-		db.DB.Where("CreatorID = ?", id).Or("BuyerID = ?", id).Find(&lots)
+		db.DB.Where("creator_id = ?", id).Or("buyer_id = ?", id).Find(&lots)
 
 	case "own":
-		db.DB.Where("CreatorID = ?", id).Find(&lots)
+		db.DB.Where("creator_id = ?", id).Find(&lots)
 
 	case "buyed":
-		db.DB.Where("BuyerID = ?", id).Find(&lots)
+		db.DB.Where("buyer_id = ?", id).Find(&lots)
 
 	}
 	//db.DB.Where("status = ?", typ).Find(&lots)
 
-	return lots, db;
+	return lots
+}
+
+func (db DataB) GetLotByID(id int)(el lotS.Lot, err error){
+	db.DB.Where("ID = ?", id).First(&el)
+
+	if el.ID == 0 {
+		return el, errors.New("this lot dosen't exist")
+	}
+
+	return el, err
+}
+
+func (db DataB) SMBBuyIT(userID int, l lotS.Lot, price float64) (el lotS.Lot, err error){
+
+	l.BuyPrice = price
+	l.BuyerID = userID
+
+	db.DB.Where(lotS.Lot{ID: l.ID}).Assign(l).FirstOrCreate(&el)
+
+	return el, err
 }

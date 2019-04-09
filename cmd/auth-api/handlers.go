@@ -182,8 +182,9 @@ func (db rout) getUsersLots(w http.ResponseWriter, r *http.Request){
 	if userID == 0{
 		userID = ses.User_id
 	}
+	lots := db.db.GetUsersLots(userID, typ)
 
-	jLots, err := auth.MassLotsToJSON(db.db.GetUsersLots(userID, typ))
+	jLots, err := auth.MassLotsToJSON(lots, db.db.Db())
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -202,7 +203,8 @@ func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	typ := chi.URLParam(r, "type")
+	//typ := chi.URLParam(r, "type")
+	typ := r.PostFormValue("type")
 
 	jLots, err := auth.MassLotsToJSON(db.db.GetLots(typ))
 
@@ -262,4 +264,51 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 	}
 	_, _ = w.Write(l)
 
+}
+
+func (db rout) buyLot(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+
+	ses, err := db.db.GetSesByToken(token)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
+		_, _ = w.Write([]byte(mapVar))
+		return
+	}
+	var upd lotS.Price
+	err = json.Unmarshal(body, &upd)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
+		_, _ = w.Write([]byte(mapVar))
+		return
+	}
+
+	el, err := lot.BuyLot(ses.User_id , lotID , upd.Price , db.db)
+
+	if err!= nil{
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+
+	mess, err := json.Marshal(auth.ToJsonLot(el, db.db.Db()))
+	if err != nil {
+		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
+		return
+	}
+	_, _ = w.Write(mess)
 }

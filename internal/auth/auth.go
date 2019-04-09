@@ -17,6 +17,8 @@ import (
 func genToken() string {
 	size := 10
 
+	rand.NewSource(int64(time.Now().Nanosecond() * time.Now().Second()))
+
 	rb := make([]byte, size)
 	_, err := rand.Read(rb)
 
