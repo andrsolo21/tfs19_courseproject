@@ -9,15 +9,16 @@ import (
 	"courseproject/internal/users"
 	"courseproject/pkg/log"
 	"encoding/json"
-	"github.com/go-chi/chi"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/go-chi/chi"
 )
 
 type rout struct {
-	db storages.INTT
+	db     storages.INTT
 	logger log.Logger
 }
 
@@ -28,22 +29,23 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		//fmt.Fprintf(w, "err %q\n", err, err.Error())
-		//http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "", http.StatusBadRequest)
 		dbr.logger.Errorf("can't read message: %v", body)
 
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
 		_, err = w.Write(mapVar)
-		if err!= nil{
+		if err != nil {
 			dbr.logger.Errorf("can't send error: %s", err.Error())
 		}
 		return
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
+		dbr.logger.Errorf("can't unmarshal message: %v", body)
 		http.Error(w, "", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
 		_, err = w.Write(mapVar)
-		if err!= nil{
+		if err != nil {
 			dbr.logger.Errorf("can't send error: %s", err.Error())
 		}
 		return
@@ -52,10 +54,18 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 	err = auth.AddUser(resp, dbr.db.Db())
 
 	if err != nil {
+
+		dbr.logger.Debugf("error in signup: %s, %v", err.Error(), resp)
+
 		http.Error(w, "", http.StatusConflict)
 		mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
-		_, err = w.Write([]byte(mapVar))
-		if err!= nil{
+
+		/*if err != nil{
+			dbr.logger.Errorf("can't marshal error: %s", err.Error())
+		}*/
+
+		_, err = w.Write(mapVar)
+		if err != nil {
 			dbr.logger.Errorf("can't send message: %s", err.Error())
 		}
 		return
@@ -72,20 +82,27 @@ func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.CreateSession(r.PostFormValue("email"), r.PostFormValue("password"), dbr.db.Db())
 
 	if err == nil {
+
 		mapVar, _ := json.Marshal(map[string]string{"access_token": token, "token_type": "bearer"})
-		_, err = w.Write([]byte(mapVar))
+		_, err = w.Write(mapVar)
+
+		dbr.logger.Infof("User signin: %s", token)
+
+		if err != nil {
+			dbr.logger.Errorf("can't send message: %s", err.Error())
+		}
 		return
 	}
 
 	http.Error(w, "", http.StatusUnauthorized)
-	mapVar, err:= json.Marshal(map[string]string{"error": err.Error()})
+	mapVar, err := json.Marshal(map[string]string{"error": err.Error()})
 
-	if err!= nil{
-		dbr.logger.Errorf("can't send error: %s", err.Error())
+	if err != nil {
+		dbr.logger.Errorf("can't marshal error: %s", err.Error())
 	}
 
-	_, err = w.Write([]byte(mapVar))
-	if err != nil{
+	_, err = w.Write(mapVar)
+	if err != nil {
 		dbr.logger.Errorf("can't send error: %s", err.Error())
 	}
 
@@ -97,13 +114,18 @@ func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 
 	ses, err := dbr.db.GetSesByToken(token)
 	if err != nil {
+		dbr.logger.Debugf("Unauthorized request token: %s", token)
+
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
+	dbr.logger.Infof("Authorized request token: %s", token)
+
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		dbr.logger.Debugf("can't read user's ID: %s", token)
 		return
 	}
 
@@ -125,11 +147,18 @@ func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userID2 == 0 {
-		_, _ = w.Write(user.ToJSON(true, us))
-	} else {
-		_, _ = w.Write(user.ToJSON(false, us))
-	}
+		_, err = w.Write(user.ToJSON(true, us))
 
+		if err != nil {
+			dbr.logger.Errorf("can't send message: %s", err.Error())
+		}
+	} else {
+		_, err = w.Write(user.ToJSON(false, us))
+
+		if err != nil {
+			dbr.logger.Errorf("can't send message: %s", err.Error())
+		}
+	}
 }
 
 func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
@@ -166,14 +195,14 @@ func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 			//fmt.Fprintf(w, "err %q\n", err, err.Error())
 			http.Error(w, "", http.StatusBadRequest)
 			mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
-			_, _ = w.Write([]byte(mapVar))
+			_, _ = w.Write(mapVar)
 			return
 		}
 		err = json.Unmarshal(body, &upd)
 		if err != nil {
 			http.Error(w, "", http.StatusBadRequest)
 			mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
-			_, _ = w.Write([]byte(mapVar))
+			_, _ = w.Write(mapVar)
 			return
 		}
 
@@ -214,6 +243,9 @@ func (dbr rout) getUsersLots(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(jLots)
 
+	if err != nil {
+		dbr.logger.Errorf("Can't send message: %s", err.Error())
+	}
 
 }
 
@@ -256,7 +288,7 @@ func (dbr rout) addLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't readALL"})
-		_, _ = w.Write([]byte(mapVar))
+		_, _ = w.Write(mapVar)
 		return
 	}
 
@@ -264,7 +296,7 @@ func (dbr rout) addLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
-		_, _ = w.Write([]byte(mapVar))
+		_, _ = w.Write(mapVar)
 		return
 	}
 	lts := lot.Generate(resp)
@@ -276,7 +308,7 @@ func (dbr rout) addLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "", http.StatusConflict)
 		mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
-		_, _ = w.Write([]byte(mapVar))
+		_, _ = w.Write(mapVar)
 		return
 	}
 
@@ -309,7 +341,7 @@ func (dbr rout) buyLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
-		_, _ = w.Write([]byte(mapVar))
+		_, _ = w.Write(mapVar)
 		return
 	}
 	var upd lots.Price
@@ -317,7 +349,7 @@ func (dbr rout) buyLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
-		_, _ = w.Write([]byte(mapVar))
+		_, _ = w.Write(mapVar)
 		return
 	}
 

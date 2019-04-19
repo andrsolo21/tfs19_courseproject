@@ -6,18 +6,16 @@ import (
 	"courseproject/internal/storages"
 	"courseproject/internal/user"
 	"courseproject/internal/users"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"time"
 )
 
 func genToken() string {
 	size := 10
-
-	rand.NewSource(int64(time.Now().Nanosecond() * time.Now().Second()))
 
 	rb := make([]byte, size)
 	_, err := rand.Read(rb)
@@ -68,6 +66,12 @@ func CreateSession(log string, pas string, data storages.DataB) (string, error) 
 	}
 
 	token := genToken()
+	_, err = data.GetSesByToken(token)
+
+	for err != nil {
+		token = genToken()
+		_, err = data.GetSesByToken(token)
+	}
 
 	sesio := session.CreateSession(token, us.ID)
 

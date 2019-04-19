@@ -4,11 +4,13 @@ import (
 	"courseproject/internal/lots"
 	"courseproject/internal/sessions"
 	"courseproject/internal/users"
-	"errors"
+
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
+
+	"time"
 	// Register some standard stuff
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"time"
 )
 
 type DataB struct {

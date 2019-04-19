@@ -3,6 +3,7 @@ package main
 import (
 	"courseproject/internal/storages"
 	"courseproject/pkg/log"
+
 	"github.com/go-chi/chi"
 
 	"net/http"
@@ -31,10 +32,10 @@ func main() {
 
 	//logger.Warn("test warn")
 
-
 	defer data2.db.Db().DB.Close()
 
 	data2.db = data2.db.CreateTables()
+	data2.logger = log.New()
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", data2.signup)
@@ -46,6 +47,7 @@ func main() {
 
 		r.Get("/lots", data2.getLots)
 		r.Post("/lots", data2.addLot)
+		r.Post("/lots/buy", data2.buyLot)
 	})
 
 	_ = http.ListenAndServe(":5000", r)

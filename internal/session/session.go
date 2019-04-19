@@ -7,7 +7,7 @@ import (
 
 func CreateSession(token string, id int) sessions.Session {
 
-	valid := time.Duration(5 * time.Hour)
+	valid := 5 * time.Hour
 
 	return sessions.Session{
 		SessionID:  token,
