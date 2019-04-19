@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"courseproject/internal/database"
-	"courseproject/internal/lotS"
+	"courseproject/internal/lots"
 	"courseproject/internal/session"
+	"courseproject/internal/storages"
 	"courseproject/internal/user"
-	"courseproject/internal/userS"
+	"courseproject/internal/users"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -30,7 +30,7 @@ func genToken() string {
 	return rs
 }
 
-func AddUser(add userS.User, data storages.DataB) (err error) {
+func AddUser(add users.User, data storages.DataB) (err error) {
 
 	err = checkUser(add, data)
 
@@ -45,7 +45,7 @@ func AddUser(add userS.User, data storages.DataB) (err error) {
 	return err
 }
 
-func checkUser(add userS.User, db storages.DataB) (err error) {
+func checkUser(add users.User, db storages.DataB) (err error) {
 
 	if db.CheckEmail(add.Email) {
 		return errors.New("email already exist")
@@ -54,7 +54,7 @@ func checkUser(add userS.User, db storages.DataB) (err error) {
 	return nil
 }
 
-func ChangeUser(id int, upd userS.User, db storages.DataB) userS.User {
+func ChangeUser(id int, upd users.User, db storages.DataB) users.User {
 
 	return db.ChangeUser(upd, id)
 }
@@ -94,11 +94,10 @@ func (a Auth) GetAllLots() []lot.Lot {
 }
 */
 
-
-func MassLotsToJSON(lots []lotS.Lot, db storages.DataB) ([]byte, error) {
-	var out []lotS.LotForJSON
-	for _, l := range lots {
-		out = append(out, ToJsonLot(l, db))
+func MassLotsToJSON(lts []lots.Lot, db storages.DataB) ([]byte, error) {
+	var out []lots.LotForJSON
+	for _, l := range lts {
+		out = append(out, ToJSONLot(l, db))
 	}
 	return json.Marshal(out)
 }
@@ -109,11 +108,11 @@ func (a Auth) LenLots() int {
 	return len(a.lots)
 }*/
 
-func ToJsonLot(l lotS.Lot, db storages.DataB) lotS.LotForJSON {
+func ToJSONLot(l lots.Lot, db storages.DataB) lots.LotForJSON {
 	user1, _ := db.GetUserByID(l.CreatorID)
 	user2, _ := db.GetUserByID(l.BuyerID)
 
-	return lotS.LotForJSON{
+	return lots.LotForJSON{
 		ID:          l.ID,
 		Title:       l.Title,
 		Description: l.Description,

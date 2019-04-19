@@ -1,18 +1,18 @@
 package session
 
 import (
-	"courseproject/internal/sessionS"
+	"courseproject/internal/sessions"
 	"time"
 )
 
-func CreateSession(token string, id int) sessionS.Session {
+func CreateSession(token string, id int) sessions.Session {
 
 	valid := time.Duration(5 * time.Hour)
 
-	return sessionS.Session{
-		Session_id:  token,
-		User_id:     id,
-		Created_at:  time.Now(),
-		Valid_until: time.Now().Add(valid),
+	return sessions.Session{
+		SessionID:  token,
+		UserID:     id,
+		CreatedAt:  time.Now(),
+		ValidUntil: time.Now().Add(valid),
 	}
 }

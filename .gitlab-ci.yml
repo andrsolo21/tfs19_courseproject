@@ -1,0 +1,83 @@
+stages:
+  - lint-and-test
+  - build
+  - deploy
+
+variables:
+  # When using dind, it's wise to use the overlayfs driver for
+  # improved performance.
+  DOCKER_DRIVER: overlay2
+
+unit_tests:
+  image: golang:1.12
+  stage: lint-and-test
+  before_script:
+    - mkdir -p /go/src/gitlab.com/vadimlarionov/
+    - cp -r ../hello-app /go/src/gitlab.com/vadimlarionov/
+    - cd /go/src/gitlab.com/vadimlarionov/hello-app
+  script:
+    - make test
+  tags: [docker]
+
+lint:
+  image: golangci/golangci-lint:v1.16.0
+  before_script:
+    - mkdir -p /go/src/gitlab.com/vadimlarionov/
+    - cp -r ../hello-app /go/src/gitlab.com/vadimlarionov/
+    - cd /go/src/gitlab.com/vadimlarionov/hello-app
+  stage: lint-and-test
+  script: make lint
+  tags: [docker]
+
+build:
+  image: docker:latest
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - apk update && apk add --virtual build-dependencies build-base git
+    - docker info
+  script:
+    - make docker-images
+    - docker login -u $DOCKER_HUB_LOGIN -p $DOCKER_HUB_PASSWORD
+    - make docker-push
+  after_script:
+    - docker logout
+  tags: [docker]
+
+deploy:
+  image: docker:latest
+  stage: deploy
+  variables:
+    TARGET_HOST: 51.158.105.219
+  environment:
+    name: dev
+    url: http://51.158.105.219:9000
+  services:
+    - docker:dind
+  before_script:
+    - apk update && apk add --virtual build-dependencies build-base git openssh-client
+    - docker info
+    - eval $(ssh-agent -s)
+    - echo $CI_SSH_PRIVATE_KEY | base64 -d | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  script:
+    - make ci-deploy
+  only:
+    - master
+    - tags
+  tags: [docker]
+
+deploy_prod:
+  stage: deploy
+  script:
+    - echo "Deploy to production server"
+  environment:
+    name: production
+    url: https://fintech.tinkoff.ru
+  when: manual
+  only:
+    - tags
+

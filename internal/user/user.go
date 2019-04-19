@@ -1,13 +1,13 @@
 package user
 
 import (
-	"courseproject/internal/userS"
+	"courseproject/internal/users"
 	"encoding/json"
 	"strconv"
 	"time"
 )
 
-func ToJson(seq bool, us userS.User) []byte {
+func ToJSON(seq bool, us users.User) []byte {
 	var mapVar []byte
 	if seq {
 		mapVar, _ = json.Marshal(map[string]string{
@@ -29,8 +29,8 @@ func ToJson(seq bool, us userS.User) []byte {
 	return mapVar
 }
 
-func ToShort(us userS.User) userS.ShortUser {
-	return userS.ShortUser{
+func ToShort(us users.User) users.ShortUser {
+	return users.ShortUser{
 		FirstName: us.FirstName,
 		LastName:  us.LastName,
 		ID:        us.ID,

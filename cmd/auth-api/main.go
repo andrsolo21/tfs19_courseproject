@@ -1,10 +1,10 @@
 package main
 
 import (
-	storages "courseproject/internal/database"
+	"courseproject/internal/storages"
+	"courseproject/pkg/log"
 	"github.com/go-chi/chi"
-	"github.com/sirupsen/logrus"
-	"log"
+
 	"net/http"
 )
 
@@ -14,16 +14,23 @@ func main() {
 
 	r := chi.NewRouter()
 
-	logger := logrus.New()
-	logger.Formatter = &logrus.JSONFormatter{}
+	logger := log.New()
 	//r.Use(NewStructuredLogger(logger))
 
 	var data2 rout
 
 	data2.db, err = storages.NewDataB()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err.Error())
 	}
+
+	//logger.Error("test")
+	//logger.Debug("test debud")
+
+	//logger.Info("test info")
+
+	//logger.Warn("test warn")
+
 
 	defer data2.db.Db().DB.Close()
 

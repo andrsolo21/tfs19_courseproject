@@ -2,11 +2,12 @@ package main
 
 import (
 	"courseproject/internal/auth"
-	"courseproject/internal/database"
 	"courseproject/internal/lot"
-	"courseproject/internal/lotS"
+	"courseproject/internal/lots"
+	"courseproject/internal/storages"
 	"courseproject/internal/user"
-	"courseproject/internal/userS"
+	"courseproject/internal/users"
+	"courseproject/pkg/log"
 	"encoding/json"
 	"github.com/go-chi/chi"
 	"io/ioutil"
@@ -17,25 +18,34 @@ import (
 
 type rout struct {
 	db storages.INTT
+	logger log.Logger
 }
 
 func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 
-	var resp userS.User
+	var resp users.User
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		//fmt.Fprintf(w, "err %q\n", err, err.Error())
-		http.Error(w, "", http.StatusBadRequest)
+		//http.Error(w, "", http.StatusBadRequest)
+		dbr.logger.Errorf("can't read message: %v", body)
+
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
-		_, _ = w.Write([]byte(mapVar))
+		_, err = w.Write(mapVar)
+		if err!= nil{
+			dbr.logger.Errorf("can't send error: %s", err.Error())
+		}
 		return
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
-		_, _ = w.Write([]byte(mapVar))
+		_, err = w.Write(mapVar)
+		if err!= nil{
+			dbr.logger.Errorf("can't send error: %s", err.Error())
+		}
 		return
 	}
 
@@ -44,7 +54,10 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "", http.StatusConflict)
 		mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
-		_, _ = w.Write([]byte(mapVar))
+		_, err = w.Write([]byte(mapVar))
+		if err!= nil{
+			dbr.logger.Errorf("can't send message: %s", err.Error())
+		}
 		return
 	}
 
@@ -60,21 +73,29 @@ func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil {
 		mapVar, _ := json.Marshal(map[string]string{"access_token": token, "token_type": "bearer"})
-		_, _ = w.Write([]byte(mapVar))
+		_, err = w.Write([]byte(mapVar))
 		return
 	}
 
 	http.Error(w, "", http.StatusUnauthorized)
-	mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
-	_, _ = w.Write([]byte(mapVar))
+	mapVar, err:= json.Marshal(map[string]string{"error": err.Error()})
+
+	if err!= nil{
+		dbr.logger.Errorf("can't send error: %s", err.Error())
+	}
+
+	_, err = w.Write([]byte(mapVar))
+	if err != nil{
+		dbr.logger.Errorf("can't send error: %s", err.Error())
+	}
 
 }
 
-func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
+func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	ses, err := db.db.GetSesByToken(token)
+	ses, err := dbr.db.GetSesByToken(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -86,17 +107,17 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if db.db.CountUsers() < userID {
+	if dbr.db.CountUsers() < userID {
 		http.Error(w, "user for the given ID is not found", http.StatusNotFound)
 		return
 	}
 
 	userID2 := userID
 	if userID == 0 {
-		userID = ses.User_id
+		userID = ses.UserID
 	}
 
-	us, err := db.db.GetUserByID(userID)
+	us, err := dbr.db.GetUserByID(userID)
 
 	if err != nil {
 		http.Error(w, "user for the given ID not found", http.StatusNotFound)
@@ -104,24 +125,24 @@ func (db rout) userGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userID2 == 0 {
-		_, _ = w.Write(user.ToJson(true, us))
+		_, _ = w.Write(user.ToJSON(true, us))
 	} else {
-		_, _ = w.Write(user.ToJson(false, us))
+		_, _ = w.Write(user.ToJSON(false, us))
 	}
 
 }
 
-func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
+func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	sesio, err := db.db.GetSesByToken(token)
+	sesio, err := dbr.db.GetSesByToken(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	var upd userS.User
+	var upd users.User
 
 	switch r.Header.Get("Content-Type") {
 	case "multipart/form-data":
@@ -158,14 +179,14 @@ func (db rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	us := auth.ChangeUser(sesio.User_id, upd, db.db.Db())
+	us := auth.ChangeUser(sesio.UserID, upd, dbr.db.Db())
 
-	_, _ = w.Write(user.ToJson(true, us))
+	_, _ = w.Write(user.ToJSON(true, us))
 }
 
-func (db rout) getUsersLots(w http.ResponseWriter, r *http.Request){
+func (dbr rout) getUsersLots(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
-	ses, err := db.db.GetSesByToken(token)
+	ses, err := dbr.db.GetSesByToken(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -179,25 +200,27 @@ func (db rout) getUsersLots(w http.ResponseWriter, r *http.Request){
 
 	typ := chi.URLParam(r, "type")
 
-	if userID == 0{
-		userID = ses.User_id
+	if userID == 0 {
+		userID = ses.UserID
 	}
-	lots := db.db.GetUsersLots(userID, typ)
+	lts := dbr.db.GetUsersLots(userID, typ)
 
-	jLots, err := auth.MassLotsToJSON(lots, db.db.Db())
+	jLots, err := auth.MassLotsToJSON(lts, dbr.db.Db())
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	_, _ = w.Write(jLots)
+	_, err = w.Write(jLots)
+
+
 }
 
-func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
+func (dbr rout) getLots(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
-	_, err := db.db.GetSesByToken(token)
+	_, err := dbr.db.GetSesByToken(token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
@@ -206,7 +229,7 @@ func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
 	//typ := chi.URLParam(r, "type")
 	typ := r.PostFormValue("type")
 
-	jLots, err := auth.MassLotsToJSON(db.db.GetLots(typ))
+	jLots, err := auth.MassLotsToJSON(dbr.db.GetLots(typ))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -216,18 +239,18 @@ func (db rout) getLots(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(jLots)
 }
 
-func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
+func (dbr rout) addLot(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
 
-	ses, err := db.db.GetSesByToken(token)
+	ses, err := dbr.db.GetSesByToken(token)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	var resp lotS.LotTCU
+	var resp lots.LotTCU
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -246,9 +269,9 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 	}
 	lts := lot.Generate(resp)
 
-	lts.CreatorID = ses.User_id
+	lts.CreatorID = ses.UserID
 
-	err = db.db.AddLot(lts)
+	err = dbr.db.AddLot(lts)
 
 	if err != nil {
 		http.Error(w, "", http.StatusConflict)
@@ -257,7 +280,7 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	l, err := json.Marshal(auth.ToJsonLot(lts, db.db.Db()))
+	l, err := json.Marshal(auth.ToJSONLot(lts, dbr.db.Db()))
 	if err != nil {
 		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
 		return
@@ -266,10 +289,10 @@ func (db rout) addLot(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (db rout) buyLot(w http.ResponseWriter, r *http.Request) {
+func (dbr rout) buyLot(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 
-	ses, err := db.db.GetSesByToken(token)
+	ses, err := dbr.db.GetSesByToken(token)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -289,7 +312,7 @@ func (db rout) buyLot(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(mapVar))
 		return
 	}
-	var upd lotS.Price
+	var upd lots.Price
 	err = json.Unmarshal(body, &upd)
 	if err != nil {
 		http.Error(w, "", http.StatusBadRequest)
@@ -298,14 +321,14 @@ func (db rout) buyLot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	el, err := lot.BuyLot(ses.User_id , lotID , upd.Price , db.db)
+	el, err := lot.BuyLot(ses.UserID, lotID, upd.Price, dbr.db)
 
-	if err!= nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 
-	mess, err := json.Marshal(auth.ToJsonLot(el, db.db.Db()))
+	mess, err := json.Marshal(auth.ToJSONLot(el, dbr.db.Db()))
 	if err != nil {
 		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
 		return

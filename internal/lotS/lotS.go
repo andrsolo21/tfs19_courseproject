@@ -1,7 +1,7 @@
-package lotS
+package lots
 
 import (
-	"courseproject/internal/userS"
+	"courseproject/internal/users"
 	"time"
 )
 
@@ -31,8 +31,8 @@ type LotForJSON struct {
 	EndAt       time.Time       `json:"end_at"`
 	CreatedAt   time.Time       `json:"created_at"`
 	UpdatedAt   time.Time       `json:"updated_at"`
-	CreatorID   userS.ShortUser `json:"creator"`
-	BuyerID     userS.ShortUser `json:"buyer"`
+	CreatorID   users.ShortUser `json:"creator"`
+	BuyerID     users.ShortUser `json:"buyer"`
 }
 
 type LotTCU struct {
