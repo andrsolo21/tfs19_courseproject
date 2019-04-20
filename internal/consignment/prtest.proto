@@ -1,0 +1,17 @@
+syntax = "proto3";
+package example;
+
+import "google/api/annotations.proto";
+
+message StringMessage {
+    string id = 1;
+}
+
+service YourService {
+    rpc getUser (StringMessage) returns (StringMessage) {
+        option (google.api.http) = {
+      get: "/users/{id}"
+      //body: "*"
+    };
+    }
+}

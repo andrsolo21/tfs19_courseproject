@@ -66,3 +66,26 @@ ci-deploy:
 	ssh -t root@$$TARGET_HOST 'cd hello-app && docker-compose stop'
 	scp ./docker-compose.yml root@$$TARGET_HOST:hello-app/docker-compose.yml
 	ssh -t root@$$TARGET_HOST 'cd hello-app && IMAGE_TAG=$(DOCKER_IMAGE_TAG) docker-compose up -d'
+
+#.PHONY: proto
+proto:
+	protoc -I/usr/local/include -I. \
+  -I$GOPATH/src \
+  -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+  --go_out=plugins=grpc:. \
+	internal/consignment/prtest.proto
+
+	protoc -I/usr/local/include -I. \
+      -I$GOPATH/src \
+      -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+    --grpc-gateway_out=logtostderr=true:. \
+    internal/consignment/prtest.proto
+
+protoc -I/usr/local/include -I. \
+-I${GOPATH}/src \
+-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+--swagger_out=logtostderr=true:. \
+internal/consignment/prtest.proto
+
+
+

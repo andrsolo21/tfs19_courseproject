@@ -1,13 +1,26 @@
 package main
 
 import (
+	"courseproject/internal/server"
 	"courseproject/internal/storages"
 	"courseproject/pkg/log"
-
 	"github.com/go-chi/chi"
-
 	"net/http"
 )
+
+/*func gRPCService(serviceAddr string)  {
+	lis , err := net.Listen("tcp", serviceAddr)
+	if err != nil{
+		//fatal
+	}
+
+
+
+	s := grpc.NewServer()
+
+	//session
+
+*/
 
 func main() {
 
@@ -49,6 +62,9 @@ func main() {
 		r.Post("/lots", data2.addLot)
 		r.Post("/lots/buy", data2.buyLot)
 	})
+
+	serv := server.New()
+	serv.Start()
 
 	_ = http.ListenAndServe(":5000", r)
 }
