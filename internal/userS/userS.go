@@ -14,7 +14,7 @@ type User struct {
 }
 
 type ShortUser struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	ID        int    `json:"id"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	ID        int    `json:"id,omitempty"`
 }

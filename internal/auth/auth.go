@@ -68,7 +68,7 @@ func CreateSession(log string, pas string, data storages.DataB) (string, error) 
 	token := genToken()
 	_, err = data.GetSesByToken(token)
 
-	for err != nil {
+	for err == nil {
 		token = genToken()
 		_, err = data.GetSesByToken(token)
 	}
@@ -108,7 +108,6 @@ func MassLotsToJSON(lts []lots.Lot, db storages.DataB) ([]byte, error) {
 
 /*
 func (a Auth) LenLots() int {
-	//TODO будет с SQL вообще не обязательно
 	return len(a.lots)
 }*/
 
@@ -129,5 +128,6 @@ func ToJSONLot(l lots.Lot, db storages.DataB) lots.LotForJSON {
 		UpdatedAt:   l.UpdatedAt,
 		CreatorID:   user.ToShort(user1),
 		BuyerID:     user.ToShort(user2),
+		DeletedAt:   l.DeletedAt,
 	}
 }

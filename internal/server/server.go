@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/go-chi/chi"
 	"log"
 	"net"
 	"net/http"
@@ -11,8 +10,9 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	//pb "github.com/maddevsio/grpc-rest-api-example/pb"
-	"google.golang.org/grpc"
 	pb "courseproject/internal/consignment"
+
+	"google.golang.org/grpc"
 )
 
 // Greeter ...

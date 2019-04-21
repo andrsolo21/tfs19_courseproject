@@ -259,7 +259,12 @@ func (dbr rout) getLots(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//typ := chi.URLParam(r, "type")
-	typ := r.PostFormValue("type")
+	//var typ string
+	//switch r.Header.Get("Content-Type") {
+	//case "multipart/form-data":
+	//typ = r.PostFormValue("status")
+	//}
+	typ := r.URL.Query().Get("status")
 
 	jLots, err := auth.MassLotsToJSON(dbr.db.GetLots(typ))
 
@@ -294,23 +299,36 @@ func (dbr rout) addLot(w http.ResponseWriter, r *http.Request) {
 
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
+		dbr.logger.Debugf("can't unmarshall message:%+v, %s", body, err.Error())
 		http.Error(w, "", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
 		_, _ = w.Write(mapVar)
 		return
 	}
-	lts := lot.Generate(resp)
+	lts, err := lot.Generate(resp)
+
+	if err != nil {
+		dbr.logger.Debugf("can't add lot: %s, error: %s", resp.Title, err.Error())
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't add lot " + err.Error()})
+		_, _ = w.Write(mapVar)
+		return
+	}
 
 	lts.CreatorID = ses.UserID
 
-	err = dbr.db.AddLot(lts)
+	lts, err = dbr.db.AddLot(lts)
 
 	if err != nil {
 		http.Error(w, "", http.StatusConflict)
+		dbr.logger.Debugf("can't add lot:%d, %s", lts.ID, err.Error())
+
 		mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
 		_, _ = w.Write(mapVar)
 		return
 	}
+
+	dbr.logger.Infof("lot was created, lot: %d", lts.ID)
 
 	l, err := json.Marshal(auth.ToJSONLot(lts, dbr.db.Db()))
 	if err != nil {
@@ -362,8 +380,116 @@ func (dbr rout) buyLot(w http.ResponseWriter, r *http.Request) {
 
 	mess, err := json.Marshal(auth.ToJSONLot(el, dbr.db.Db()))
 	if err != nil {
-		http.Error(w, "problem with marshalling lots", http.StatusUnauthorized)
+		http.Error(w, "problem with marshalling lots", http.StatusBadRequest)
 		return
 	}
 	_, _ = w.Write(mess)
+}
+
+func (dbr rout) updateLot(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+
+	ses, err := dbr.db.GetSesByToken(token)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't readALL"})
+		_, _ = w.Write(mapVar)
+		return
+	}
+
+	var resp lots.LotTCU
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		dbr.logger.Debugf("can't unmarshall message:%+v, %s", body, err.Error())
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
+		_, _ = w.Write(mapVar)
+		return
+	}
+
+	el, err := lot.UpdateLot(ses.UserID, resp, lotID, dbr.db)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+
+	mess, err := json.Marshal(auth.ToJSONLot(el, dbr.db.Db()))
+	if err != nil {
+		http.Error(w, "problem with marshalling lot", http.StatusUnauthorized)
+		return
+	}
+	_, _ = w.Write(mess)
+}
+
+func (dbr rout) getLot(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+
+	_, err := dbr.db.GetSesByToken(token)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		return
+	}
+
+	el, err := dbr.db.GetLotByID(lotID)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+
+	mess, err := json.Marshal(auth.ToJSONLot(el, dbr.db.Db()))
+	if err != nil {
+		http.Error(w, "problem with marshalling lot", http.StatusBadRequest)
+		return
+	}
+	_, _ = w.Write(mess)
+}
+
+func (dbr rout) deleteLot(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+
+	ses, err := dbr.db.GetSesByToken(token)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		return
+	}
+
+	//el, err := dbr.db.GetLotByID(lotID)
+	err = lot.DeleteLot(ses.UserID, lotID, dbr.db)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -1,24 +1,24 @@
 package main
 
 import (
-	"courseproject/internal/server"
 	"courseproject/internal/storages"
 	"courseproject/pkg/log"
-	"github.com/go-chi/chi"
 	"net/http"
+
+	"github.com/go-chi/chi"
 )
 
 /*func gRPCService(serviceAddr string)  {
-	lis , err := net.Listen("tcp", serviceAddr)
-	if err != nil{
-		//fatal
-	}
+lis , err := net.Listen("tcp", serviceAddr)
+if err != nil{
+	//fatal
+}
 
 
 
-	s := grpc.NewServer()
+s := grpc.NewServer()
 
-	//session
+//session
 
 */
 
@@ -48,7 +48,10 @@ func main() {
 	defer data2.db.Db().DB.Close()
 
 	data2.db = data2.db.CreateTables()
+
 	data2.logger = log.New()
+
+	go data2.db.KillBadLots(data2.logger)
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/signup", data2.signup)
@@ -60,11 +63,14 @@ func main() {
 
 		r.Get("/lots", data2.getLots)
 		r.Post("/lots", data2.addLot)
-		r.Post("/lots/buy", data2.buyLot)
+		r.Put("/lots/{id}/buy", data2.buyLot)
+		r.Get("/lots/{id}", data2.getLot)
+		r.Put("/lots/{id}", data2.updateLot)
+		r.Delete("/lots/{id}",data2.deleteLot)
 	})
 
-	serv := server.New()
-	serv.Start()
+	//serv := server.New()
+	//serv.Start()
 
 	_ = http.ListenAndServe(":5000", r)
 }

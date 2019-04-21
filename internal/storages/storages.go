@@ -4,6 +4,7 @@ import (
 	"courseproject/internal/lots"
 	"courseproject/internal/sessions"
 	"courseproject/internal/users"
+	"courseproject/pkg/log"
 
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -27,12 +28,16 @@ type INTT interface {
 	GetUserByEmPass(em string, pass string) (el users.User, err error)
 	ChangeUser(us users.User, id int) users.User
 	CountUsers() int
-	AddLot(l lots.Lot) error
+	AddLot(l lots.Lot) (lots.Lot, error)
 	GetLots(typ string) (lots []lots.Lot, d DataB)
 	GetUsersLots(id int, role string) (lots []lots.Lot)
 	Db() DataB
 	GetLotByID(id int) (el lots.Lot, err error)
 	SMBBuyIT(userID int, l lots.Lot, price float64) (el lots.Lot, err error)
+	UpdateLot(l lots.Lot, id int) lots.Lot
+	KillBadLots(logger log.Logger)
+	DeleteCrLor(id int)
+	CheckDelLot(id int) bool
 }
 
 func NewDataB() (d DataB, err error) {
@@ -43,6 +48,8 @@ func NewDataB() (d DataB, err error) {
 	dsn := "postgres://" + user + ":" + pas + "@localhost:5432/" + gormDataBase +
 		"?sslmode=disable&fallback_application_name=fintech-app"
 	database, err := gorm.Open("postgres", dsn)
+
+	//database.
 
 	/*if err != nil {
 		fmt.Printf("can't connect to db: %s", err)
@@ -151,13 +158,13 @@ func (db DataB) CountUsers() int {
 	return count
 }
 
-func (db DataB) AddLot(l lots.Lot) error {
+func (db DataB) AddLot(l lots.Lot) (lots.Lot, error) {
 	db.DB = db.DB.Create(&l)
 
 	if err := db.DB.Error; err != nil {
-		return err
+		return l, err
 	}
-	return nil
+	return l, nil
 }
 
 func (db DataB) GetLots(typ string) (lots []lots.Lot, d DataB) {
@@ -208,4 +215,53 @@ func (db DataB) SMBBuyIT(userID int, l lots.Lot, price float64) (el lots.Lot, er
 	db.DB.Where(lots.Lot{ID: l.ID}).Assign(l).FirstOrCreate(&el)
 
 	return el, err
+}
+
+func (db DataB) UpdateLot(l lots.Lot, id int) lots.Lot {
+
+	var el lots.Lot
+
+	db.DB.Where(lots.Lot{ID: id}).Assign(lots.Lot{
+		Title:       l.Title,
+		Description: l.Description,
+		MinPrice:    l.MinPrice,
+		PriceStep:   l.PriceStep,
+		Status:      l.Status,
+		EndAt:       l.EndAt,
+		UpdatedAt:   l.UpdatedAt,
+		DeletedAt:   l.DeletedAt,
+	}).FirstOrCreate(&el)
+
+	return el
+}
+
+func (db DataB) KillBadLots(logger log.Logger) {
+	var lts []lots.Lot
+
+	for {
+		db.DB.Where("end_at < now() AND status != ?", "finished").Assign(lots.Lot{
+			Status: "finished",
+		}).FirstOrCreate(&lts)
+
+		for _, el := range lts {
+			logger.Infof("lot %d was finished", el.ID)
+		}
+
+		time.Sleep(time.Second)
+	}
+}
+
+func (db DataB) DeleteCrLor(id int) {
+	db.DB.Where("id = ?", id).Delete(lots.Lot{})
+}
+
+func (db DataB) CheckDelLot(id int) bool {
+	var c int
+
+	db.DB.Where("id = ? AND deleted_at is NOT NULL", id).Count(&c)
+
+	if c == 0 {
+		return true
+	}
+	return false
 }
