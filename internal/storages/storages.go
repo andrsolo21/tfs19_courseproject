@@ -260,8 +260,5 @@ func (db DataB) CheckDelLot(id int) bool {
 
 	db.DB.Where("id = ? AND deleted_at is NOT NULL", id).Count(&c)
 
-	if c == 0 {
-		return true
-	}
-	return false
+	return c == 0
 }

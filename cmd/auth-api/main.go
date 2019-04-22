@@ -66,7 +66,7 @@ func main() {
 		r.Put("/lots/{id}/buy", data2.buyLot)
 		r.Get("/lots/{id}", data2.getLot)
 		r.Put("/lots/{id}", data2.updateLot)
-		r.Delete("/lots/{id}",data2.deleteLot)
+		r.Delete("/lots/{id}", data2.deleteLot)
 	})
 
 	//serv := server.New()

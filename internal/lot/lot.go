@@ -140,7 +140,7 @@ func UpdateLot(userID int, l lots.LotTCU, id int, db storages.INTT) (lots.Lot, e
 	return lt, nil
 }
 
-func DeleteLot(userID int, idLot int, db storages.INTT)(error){
+func DeleteLot(userID int, idLot int, db storages.INTT) error {
 
 	lot, err := db.GetLotByID(idLot)
 	if err != nil {
@@ -148,19 +148,19 @@ func DeleteLot(userID int, idLot int, db storages.INTT)(error){
 	}
 
 	if userID != lot.CreatorID {
-		return  errors.New("trying to delete someone else's lot")
+		return errors.New("trying to delete someone else's lot")
 	}
 
-	if lot.Status == cr{
+	if lot.Status == cr {
 		db.DeleteCrLor(idLot)
-	}else{
+	} else {
 
-		if !db.CheckDelLot(idLot){
+		if !db.CheckDelLot(idLot) {
 			return errors.New("lot already deleted")
 		}
 		lot.DeletedAt = time.Now()
 		lot.UpdatedAt = time.Now()
-		lot = db.UpdateLot(lot,idLot)
+		lot = db.UpdateLot(lot, idLot)
 	}
 
 	return nil
