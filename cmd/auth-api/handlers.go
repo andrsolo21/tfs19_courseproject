@@ -534,8 +534,21 @@ func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request){
 		fmt.Printf("can't upgrade connection: %s\n", err)
 		return
 	}
-	defer conn.Close()
+	//defer conn.Close()
 
+	//go webs.SendNewLots(conn, dbr.db, dbr.templates)
+
+	for {
+		lts, _ := dbr.db.GetLots("")
+		msg, err:= json.Marshal(lts)
+
+		// Write message back to browser
+		if err = conn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
+			return
+		}
+	}
+
+/*
 	for n := 0; n < 10; n++ {
 		msg := "hello  " + string(n+48)
 		//fmt.Printf("sending to client: %s\n", msg)
@@ -546,5 +559,5 @@ func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request){
 			fmt.Printf("can't receive: %s\n", err)
 		}
 		fmt.Printf("received back from client: %s\n", string(reply[:]))
-	}
+	}*/
 }

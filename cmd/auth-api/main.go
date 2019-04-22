@@ -60,10 +60,14 @@ func main() {
 
 		r.Get("/lots/html", data2.getLotsHTML)
 		r.Get("/lot/{id}/html", data2.lotDescrHTML)
+
 	})
+
+	http.HandleFunc("/ws", data2.UpdateLots)
 
 	//serv := server.New()
 	//serv.Start()
 
 	_ = http.ListenAndServe(":5000", r)
+	_ = http.ListenAndServe(":5001", nil)
 }

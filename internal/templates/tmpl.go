@@ -31,3 +31,4 @@ func RenderTemplate(w http.ResponseWriter, name string, base string, viewModel i
 	}
 
 }
+
