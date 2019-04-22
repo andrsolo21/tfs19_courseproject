@@ -9,7 +9,7 @@ type Lot struct {
 	ID          int       `json:"id" gorm:"AUTO_INCREMENT; PRIMARY_KEY"`
 	Title       string    `json:"title" gorm:"not null"`
 	Description string    `json:"description" `
-	BuyPrice    float64   `json:"buy_price,omitempty" `
+	BuyPrice    float64   `json:"buy_price" `
 	MinPrice    float64   `json:"min_price" gorm:"not null"`
 	PriceStep   int       `json:"price_step" gorm:"not null"`
 	Status      string    `json:"status" gorm:"not null"`

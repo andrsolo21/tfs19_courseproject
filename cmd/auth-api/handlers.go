@@ -5,10 +5,12 @@ import (
 	"courseproject/internal/lot"
 	"courseproject/internal/lots"
 	"courseproject/internal/storages"
+	tmpl "courseproject/internal/templates"
 	"courseproject/internal/user"
 	"courseproject/internal/users"
 	"courseproject/pkg/log"
 	"encoding/json"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -20,6 +22,7 @@ import (
 type rout struct {
 	db     storages.INTT
 	logger log.Logger
+	templates map[string]*template.Template
 }
 
 func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
@@ -491,4 +494,9 @@ func (dbr rout) deleteLot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (dbr rout) getLotsHTML(w http.ResponseWriter, r *http.Request){
+	lts, _ := dbr.db.GetLots("finished")
+	tmpl.RenderTemplate(w, "index", "base", lts , dbr.templates)
 }

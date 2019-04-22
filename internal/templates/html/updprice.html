@@ -1,0 +1,9 @@
+{{define "head"}}<title>Обновить цену лота</title>{{end}}
+{{define "body"}}
+<h1>Обновить цену</h1>
+<form action="/auction/lots/{{.ID}}/updprice" method="post">
+    <p>Лот: {{.Title}}</p>
+    <p>Цена:<br> <input type="number" value="{{.StartPrice}}" name="newPrice"></p>
+    <p><input type="submit" value="submit"/></p>
+</form>
+{{end}}

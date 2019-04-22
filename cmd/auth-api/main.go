@@ -2,6 +2,7 @@ package main
 
 import (
 	"courseproject/internal/storages"
+	"courseproject/internal/templates"
 	"courseproject/pkg/log"
 	"net/http"
 
@@ -51,6 +52,8 @@ func main() {
 
 	data2.logger = log.New()
 
+	data2.templates = tmpl.NewTempl()
+
 	go data2.db.KillBadLots(data2.logger)
 
 	r.Route("/api/v1", func(r chi.Router) {
@@ -67,6 +70,8 @@ func main() {
 		r.Get("/lots/{id}", data2.getLot)
 		r.Put("/lots/{id}", data2.updateLot)
 		r.Delete("/lots/{id}", data2.deleteLot)
+
+		r.Get("/lots/html", data2.getLotsHTML)
 	})
 
 	//serv := server.New()
