@@ -9,29 +9,17 @@
         <tr>
             <th>ИД лота</th>
             <th>Название</th>
-            <th>Описание</th>
-            <th>Создатель</th>
-            <th>Минимальная \nцена покупки</th>
-            <th>Шаг</th>
             <th>Статус</th>
-            <th>Время окончания</th>
-            <th>Покупатель</th>
             <th>Текущая цена</th>
         </tr>
         {{range $key,$value := . }}
         <tr>
             <td>{{$value.ID}}</td>
             <td>{{$value.Title}}</td>
-            <td>{{$value.Description}}</td>
-            <td>{{$value.CreatorID}}</td>
-            <td>{{$value.MinPrice}}</td>
-            <td>{{$value.PriceStep}}</td>
             <td>{{$value.Status}}</td>
-            <td>{{$value.EndAt}}</td>
-            <td>{{$value.BuyerID}}</td>
             <td>{{$value.BuyPrice}}</td>
             <td>
-                <a href="auction/lots/{{$value.ID}}/updprice">Выставить цену</a> |
+                <a href="/api/v1/lot/{{$value.ID}}/html">Описание лота</a> |
             </td>
         </tr>
         {{end}}

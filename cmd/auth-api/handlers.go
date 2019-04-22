@@ -10,6 +10,7 @@ import (
 	"courseproject/internal/users"
 	"courseproject/pkg/log"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +18,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+
+	"github.com/gorilla/websocket"
 )
 
 type rout struct {
@@ -497,6 +500,51 @@ func (dbr rout) deleteLot(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dbr rout) getLotsHTML(w http.ResponseWriter, r *http.Request){
-	lts, _ := dbr.db.GetLots("finished")
+
+	lts, _ := dbr.db.GetLots("")
 	tmpl.RenderTemplate(w, "index", "base", lts , dbr.templates)
+}
+
+func (dbr rout) lotDescrHTML(w http.ResponseWriter, r *http.Request){
+
+	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		return
+	}
+
+	lts, err := dbr.db.GetLotByID(lotID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusConflict)
+		return
+	}
+
+	tmpl.RenderTemplate(w, "lotDescription", "base", lts , dbr.templates)
+}
+
+func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request){
+
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Printf("can't upgrade connection: %s\n", err)
+		return
+	}
+	defer conn.Close()
+
+	for n := 0; n < 10; n++ {
+		msg := "hello  " + string(n+48)
+		//fmt.Printf("sending to client: %s\n", msg)
+		err = conn.WriteMessage(websocket.TextMessage, []byte(msg))
+		_, reply, err := conn.ReadMessage()
+
+		if err != nil {
+			fmt.Printf("can't receive: %s\n", err)
+		}
+		fmt.Printf("received back from client: %s\n", string(reply[:]))
+	}
 }

@@ -9,19 +9,6 @@ import (
 	"github.com/go-chi/chi"
 )
 
-/*func gRPCService(serviceAddr string)  {
-lis , err := net.Listen("tcp", serviceAddr)
-if err != nil{
-	//fatal
-}
-
-
-
-s := grpc.NewServer()
-
-//session
-
-*/
 
 func main() {
 
@@ -72,6 +59,7 @@ func main() {
 		r.Delete("/lots/{id}", data2.deleteLot)
 
 		r.Get("/lots/html", data2.getLotsHTML)
+		r.Get("/lot/{id}/html", data2.lotDescrHTML)
 	})
 
 	//serv := server.New()
