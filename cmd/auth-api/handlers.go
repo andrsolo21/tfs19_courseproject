@@ -30,7 +30,7 @@ type rout struct {
 
 func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 
-	var resp users.User
+	var respInp users.UserInp
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -45,7 +45,7 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	err = json.Unmarshal(body, &resp)
+	err = json.Unmarshal(body, &respInp)
 	if err != nil {
 		dbr.logger.Errorf("can't unmarshal message: %v", body)
 		http.Error(w, "", http.StatusBadRequest)
@@ -57,13 +57,15 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = auth.AddUser(resp, dbr.db.Db())
+	resp := user.ConvertDate(respInp)
+
+	err, ierr := auth.AddUser(resp, dbr.db.Db())
 
 	if err != nil {
 
 		dbr.logger.Debugf("error in signup: %s, %v", err.Error(), resp)
 
-		http.Error(w, "", http.StatusConflict)
+		http.Error(w, "", ierr)
 		mapVar, _ := json.Marshal(map[string]string{"error": err.Error()})
 
 		/*if err != nil{
@@ -78,6 +80,8 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+
+	_, err = w.Write([]byte("Пользователь зарегистрирован"))
 
 }
 
@@ -410,7 +414,7 @@ func (dbr rout) updateLot(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "can't readALL", http.StatusBadRequest)
 		mapVar, _ := json.Marshal(map[string]string{"error": "can't readALL"})
 		_, _ = w.Write(mapVar)
 		return

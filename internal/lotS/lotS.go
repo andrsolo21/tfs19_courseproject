@@ -17,7 +17,7 @@ type Lot struct {
 	CreatedAt   time.Time `json:"created_at" gorm:"not null"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	CreatorID   int       `json:"creator" gorm:"not null"`
-	BuyerID     int       `json:"buyer,omitempty" template:"omitempty"`
+	BuyerID     int       `json:"buyer,omitempty"`
 	DeletedAt   time.Time `json:"deleted_at,omitempty"`
 }
 

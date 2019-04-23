@@ -5,6 +5,9 @@ import (
 	"courseproject/internal/templates"
 	"courseproject/pkg/log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/go-chi/chi"
 )
@@ -43,7 +46,7 @@ func main() {
 
 	go data2.db.KillBadLots(data2.logger)
 
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Route("/v1/auction", func(r chi.Router) {
 		r.Post("/signup", data2.signup)
 		r.Post("/signin", data2.signin)
 
@@ -68,6 +71,33 @@ func main() {
 	//serv := server.New()
 	//serv.Start()
 
-	_ = http.ListenAndServe(":5000", r)
-	_ = http.ListenAndServe(":5001", nil)
+	//_ = http.ListenAndServe(":5000", r)
+	//_ = http.ListenAndServe(":5001", nil)
+
+
+	workDir, _ := os.Getwd()
+	filesDir := filepath.Join(workDir, "swagger")
+	FileServer(r, "/swagger", http.Dir(filesDir))
+	if err := http.ListenAndServe(":5000", r); err != nil {
+		logger.Fatalf("server error:%s", err)
+	}
+}
+
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit URL parameters.")
+	}
+
+	fs := http.StripPrefix(path, http.FileServer(root))
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusTemporaryRedirect).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fs.ServeHTTP(w, r)
+	}))
+
 }
