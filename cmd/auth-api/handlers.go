@@ -10,15 +10,13 @@ import (
 	"courseproject/internal/users"
 	"courseproject/pkg/log"
 	"encoding/json"
-	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/pkg/errors"
 	"html/template"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/websocket"
+	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
 )
 
 type rout struct {
@@ -497,7 +495,7 @@ func (dbr rout) updateLot(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		//http.Error(w, err.Error(), 404)
-		dbr.returnError(w, "can't update lot", err, 404, nil)
+		dbr.returnError(w, "can't update lot: %s", err, 404, nil)
 		return
 	}
 
@@ -524,7 +522,7 @@ func (dbr rout) getLot(w http.ResponseWriter, r *http.Request) {
 	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
-		dbr.returnError(w, "can't read user's ID",nil, 400, nil)
+		dbr.returnError(w, "can't read user's ID", nil, 400, nil)
 		return
 	}
 
@@ -532,7 +530,7 @@ func (dbr rout) getLot(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		//http.Error(w, err.Error(), 404)
-		dbr.returnError(w, "can't get lot: %s",err, 404, nil)
+		dbr.returnError(w, "can't get lot: %s", err, 404, nil)
 		return
 	}
 
@@ -598,7 +596,7 @@ func (dbr rout) lotDescrHTML(w http.ResponseWriter, r *http.Request) {
 	tmpl.RenderTemplate(w, "lotDescription", "base", lts, dbr.templates)
 }
 
-func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request) {
+/*func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request) {
 
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -624,7 +622,7 @@ func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	/*
+
 		for n := 0; n < 10; n++ {
 			msg := "hello  " + string(n+48)
 			//fmt.Printf("sending to client: %s\n", msg)
@@ -635,12 +633,12 @@ func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request) {
 				fmt.Printf("can't receive: %s\n", err)
 			}
 			fmt.Printf("received back from client: %s\n", string(reply[:]))
-		}*/
-}
+		}
+}*/
 
 func (dbr rout) returnError(w http.ResponseWriter, format string, err error, ierr int, resp interface{}) {
 
-	dbr.logger.Debugf(format, err.Error())
+	dbr.logger.Debugf(format, err.Error(), resp)
 
 	http.Error(w, "", ierr)
 	mapVar, _ := json.Marshal(map[string]string{"error": errors.Errorf(format, err.Error()).Error()})

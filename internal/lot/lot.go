@@ -9,6 +9,7 @@ import (
 
 const (
 	cr string = "created"
+	fn string = "finished"
 )
 
 func Generate(l lots.LotTCU) (lots.Lot, error) {
@@ -65,7 +66,7 @@ func BuyLot(idUser int, idLot int, newPrice float64, db storages.INTT) (lots.Lot
 	switch l.Status {
 	case cr:
 		return lots.Lot{}, errors.New("lot exists, but is not traded")
-	case "finished":
+	case fn:
 		return lots.Lot{}, errors.New("bidding on the lot is completed")
 	}
 
@@ -89,7 +90,7 @@ func CheckLot(l lots.LotTCU) (lots.LotTCU, error) {
 		l.Status = cr
 	}
 
-	if !(l.Status == cr || l.Status == "active" || l.Status == "finished") {
+	if !(l.Status == cr || l.Status == "active" || l.Status == fn) {
 		return lots.LotTCU{}, errors.New("unexpected status")
 	}
 
@@ -115,15 +116,15 @@ func UpdateLot(userID int, l lots.LotTCU, id int, db storages.INTT) (lots.Lot, e
 		return lots.Lot{}, errors.New("this lot doesn't exist")
 	}
 
-	switch l.Status {
-	case "active":
-		return lots.Lot{}, errors.New("lot is already trading")
-	case "finished":
-		return lots.Lot{}, errors.New("lot trading time is out")
-	}
-
 	if userID != lot.CreatorID {
 		return lots.Lot{}, errors.New("trying to update someone else's lot")
+	}
+
+	switch lot.Status {
+	case "active":
+		return lots.Lot{}, errors.New("lot is already trading")
+	case fn:
+		return lots.Lot{}, errors.New("lot trading time is out")
 	}
 
 	l, err = CheckLot(l)

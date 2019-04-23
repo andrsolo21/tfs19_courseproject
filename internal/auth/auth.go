@@ -28,7 +28,7 @@ func genToken() string {
 	return rs
 }
 
-func AddUser(add users.User, data storages.DataB) (ierr int,err error) {
+func AddUser(add users.User, data storages.DataB) (ierr int, err error) {
 
 	ierr, err = checkUser(add, data)
 
@@ -38,18 +38,18 @@ func AddUser(add users.User, data storages.DataB) (ierr int,err error) {
 
 		err = data.AddUser(add)
 
-		return ierr,err
+		return ierr, err
 	}
-	return ierr,err
+	return ierr, err
 }
 
 func checkUser(add users.User, db storages.DataB) (ierr int, err error) {
 
-	if add.Email == ""{
+	if add.Email == "" {
 		return 400, errors.New("email is empty")
 	}
 
-	if add.Password == ""{
+	if add.Password == "" {
 		return 400, errors.New("password is empty")
 	}
 

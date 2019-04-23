@@ -2,7 +2,7 @@ package main
 
 import (
 	"courseproject/internal/storages"
-	"courseproject/internal/templates"
+	tmpl "courseproject/internal/templates"
 	"courseproject/pkg/log"
 	"net/http"
 	"os"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/go-chi/chi"
 )
-
 
 func main() {
 
@@ -66,14 +65,13 @@ func main() {
 
 	})
 
-	http.HandleFunc("/ws", data2.UpdateLots)
+	//http.HandleFunc("/ws", data2.UpdateLots)
 
 	//serv := server.New()
 	//serv.Start()
 
 	//_ = http.ListenAndServe(":5000", r)
 	//_ = http.ListenAndServe(":5001", nil)
-
 
 	workDir, _ := os.Getwd()
 	filesDir := filepath.Join(workDir, "swagger")

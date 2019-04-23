@@ -18,7 +18,7 @@ func NewTempl() map[string]*template.Template {
 	return templ
 }
 
-func RenderTemplate(w http.ResponseWriter, name string, base string, viewModel interface{},templates map[string]*template.Template) {
+func RenderTemplate(w http.ResponseWriter, name string, base string, viewModel interface{}, templates map[string]*template.Template) {
 	tmpl, ok := templates[name]
 
 	if !ok {
@@ -31,4 +31,3 @@ func RenderTemplate(w http.ResponseWriter, name string, base string, viewModel i
 	}
 
 }
-

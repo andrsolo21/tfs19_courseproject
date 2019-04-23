@@ -45,7 +45,7 @@ func (g *Greeter) startGRPC() error {
 	}
 	grpcServer := grpc.NewServer()
 	pb.RegisterYourServiceServer(grpcServer, g)
-	grpcServer.Serve(lis)
+	_ = grpcServer.Serve(lis)
 	return nil
 }
 func (g *Greeter) startREST() error {

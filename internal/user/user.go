@@ -3,10 +3,11 @@ package user
 import (
 	"courseproject/internal/users"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"strconv"
 	"time"
 	"unicode"
+
+	"github.com/pkg/errors"
 )
 
 func ToJSON(seq bool, us users.User) []byte {
@@ -81,12 +82,12 @@ func ConvertDate(us users.UserInp) (us2 users.User, err error) {
 
 func CheckDate(date string) error {
 
-	if date[4:5] != "-" && date[7:8] != "-"{
+	if date[4:5] != "-" && date[7:8] != "-" {
 		return errors.New("delimetr is not -")
 	}
 
-	for _, el :=range(date[:4] + date[5:7] + date[8:10]){
-		if !unicode.IsDigit(el){
+	for _, el := range date[:4] + date[5:7] + date[8:10] {
+		if !unicode.IsDigit(el) {
 			return errors.Errorf("it is not a digit %c", el)
 		}
 	}
