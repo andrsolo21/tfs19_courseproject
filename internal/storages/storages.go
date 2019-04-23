@@ -81,6 +81,7 @@ func (db DataB) AddUser(use users.User) error {
 }
 
 func (db DataB) AddSession(use sessions.Session) error {
+	use.SessionID = "Bearer " + use.SessionID
 	db.DB = db.DB.Create(&use)
 	if err := db.DB.Error; err != nil {
 		return err
@@ -112,7 +113,7 @@ func (db DataB) GetUserByID(id int) (users.User, error) {
 func (db DataB) GetSesByToken(token string) (sessions.Session, error) {
 	var el sessions.Session
 
-	db.DB.Where("session_id = ?", token).First(&el)
+	db.DB.Where("session_id = ?",token).First(&el)
 
 	if el.UserID == 0 {
 		return el, errors.New("this sesion dosen't exist")

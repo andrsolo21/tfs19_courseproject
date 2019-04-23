@@ -261,7 +261,7 @@ paths:
       security:
         - bearerAuth: []
       requestBody:
-        description: Информация для создания лота
+        description: Информация для создания лота. Начать аукцион сразу можно, если передать status = active.
         required: true
         content:
           application/json:
@@ -343,7 +343,7 @@ paths:
     put:
       summary: Обновить лот
       description: >
-        Обновлять можно лоты, которые имеют статус created.
+        Обновлять можно лоты, которые имеют статус created. Путём изменения статуса лота на active можно начать аукцион.
       tags: [lots]
       security:
         - bearerAuth: []
@@ -374,6 +374,30 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Удалить лот
+      description: >
+        Метода выполняет soft delete (в БД для лота проставляется значение `deleted_at = now()`),
+        фактического удаления не происходит. Удалять можно только лоты в статусе `created`.
+        Удалять можно только свой лот, чужие удалять нельзя.
+        При удалении уже удалённого лота (у которого `deleted_at != NULL`, возвращаем 404 HTTP-статус.
+      tags: [lots]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: Идентификатор лота
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          required: true
+      responses:
+        '204':
+          description: Лот успешно удалён.
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -549,6 +573,13 @@ components:
           type: string
           format: date-time
           description: Дата завершения торгов по лоту
+        status:
+          type: string
+          description: >
+            Статус лота. 'created' - лот создан, но не торгуется;
+              'active' - лот торгуется; Статус 'finished' при обновлении и создании не используется.
+          enum: [created, active, finished]
+          default: created
     BuyLot:
       type: object
       properties:

@@ -28,9 +28,9 @@ func genToken() string {
 	return rs
 }
 
-func AddUser(add users.User, data storages.DataB) (err error, ierr int) {
+func AddUser(add users.User, data storages.DataB) (ierr int,err error) {
 
-	err, ierr = checkUser(add, data)
+	ierr, err = checkUser(add, data)
 
 	if err == nil {
 		add.CreatedAt = time.Now()
@@ -38,26 +38,26 @@ func AddUser(add users.User, data storages.DataB) (err error, ierr int) {
 
 		err = data.AddUser(add)
 
-		return err, ierr
+		return ierr,err
 	}
-	return err,ierr
+	return ierr,err
 }
 
-func checkUser(add users.User, db storages.DataB) (err error, ierr int) {
+func checkUser(add users.User, db storages.DataB) (ierr int, err error) {
 
 	if add.Email == ""{
-		return errors.New("email is empty"), 400
+		return 400, errors.New("email is empty")
 	}
 
 	if add.Password == ""{
-		return errors.New("password is empty"),400
+		return 400, errors.New("password is empty")
 	}
 
 	if db.CheckEmail(add.Email) {
-		return errors.New("email already exist"), 409
+		return 409, errors.New("email already exist")
 	}
 
-	return nil,201
+	return 201, nil
 }
 
 func ChangeUser(id int, upd users.User, db storages.DataB) users.User {
