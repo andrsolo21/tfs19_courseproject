@@ -6,20 +6,18 @@ import (
 
 type testpair struct {
 	value string
-	out bool
+	out   bool
 }
-
 
 func TestCheckDate(t *testing.T) {
 
-
 	var tests = []testpair{
-		{ "1956-12-01", true },
-		{ "1596", false },
-		{ "", true },
+		{"1956-12-01", true},
+		{"1596", false},
+		{"", true},
 		{"1956_01_01", false},
 		{"I956-I1-II", false},
-		{"1956-20-20",false},
+		{"1956-20-20", false},
 	}
 
 	for _, pair := range tests {

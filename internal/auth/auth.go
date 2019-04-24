@@ -28,9 +28,9 @@ func genToken() string {
 	return rs
 }
 
-func AddUser(add users.User, data storages.DataB) (ierr int, err error) {
+func AddUser(add users.User, data storages.INTT) (ierr int, err error) {
 
-	ierr, err = checkUser(add, data)
+	ierr, err = CheckUser(add, data)
 
 	if err == nil {
 		add.CreatedAt = time.Now()
@@ -43,7 +43,7 @@ func AddUser(add users.User, data storages.DataB) (ierr int, err error) {
 	return ierr, err
 }
 
-func checkUser(add users.User, db storages.DataB) (ierr int, err error) {
+func CheckUser(add users.User, db storages.INTT) (ierr int, err error) {
 
 	if add.Email == "" {
 		return 400, errors.New("email is empty")
@@ -60,12 +60,12 @@ func checkUser(add users.User, db storages.DataB) (ierr int, err error) {
 	return 201, nil
 }
 
-func ChangeUser(id int, upd users.User, db storages.DataB) users.User {
+func ChangeUser(id int, upd users.User, db storages.INTT) users.User {
 
 	return db.ChangeUser(upd, id)
 }
 
-func CreateSession(log string, pas string, data storages.DataB) (string, error) {
+func CreateSession(log string, pas string, data storages.INTT) (string, error) {
 
 	us, err := data.GetUserByEmPass(log, pas)
 
@@ -106,7 +106,7 @@ func (a Auth) GetAllLots() []lot.Lot {
 }
 */
 
-func MassLotsToJSON(lts []lots.Lot, db storages.DataB) ([]byte, error) {
+func MassLotsToJSON(lts []lots.Lot, db storages.INTT) ([]byte, error) {
 	var out []lots.LotForJSON
 	for _, l := range lts {
 		out = append(out, ToJSONLot(l, db))
@@ -119,7 +119,7 @@ func (a Auth) LenLots() int {
 	return len(a.lots)
 }*/
 
-func ToJSONLot(l lots.Lot, db storages.DataB) lots.LotForJSON {
+func ToJSONLot(l lots.Lot, db storages.INTT) lots.LotForJSON {
 	user1, _ := db.GetUserByID(l.CreatorID)
 	user2, _ := db.GetUserByID(l.BuyerID)
 

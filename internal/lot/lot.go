@@ -10,6 +10,7 @@ import (
 const (
 	cr string = "created"
 	fn string = "finished"
+	ac string = "active"
 )
 
 func Generate(l lots.LotTCU) (lots.Lot, error) {
@@ -35,62 +36,13 @@ func Generate(l lots.LotTCU) (lots.Lot, error) {
 	}, nil
 }
 
-func BuyLot(idUser int, idLot int, newPrice float64, db storages.INTT) (lots.Lot, error) {
-
-	//проверка на ноль
-	if newPrice <= 0 {
-		return lots.Lot{}, errors.New("new price can't be less than 0")
-	}
-
-	/*us, err := db.Db().GetUserByID(idUser)
-	if err != nil {
-		return lotS.Lot{}, err
-	}*/
-
-	l, err := db.Db().GetLotByID(idLot)
-	if err != nil {
-		return lots.Lot{}, err
-	}
-	//проверка на минимльную цену
-	if newPrice < l.MinPrice {
-		return lots.Lot{}, errors.New("new price is less than the minimum")
-	}
-
-	//проверка на начальную цену
-	//проверка на шаг
-	if newPrice < l.BuyPrice+float64(l.PriceStep) && l.BuyPrice != 0 {
-		return lots.Lot{}, errors.New("bad new price")
-	}
-
-	//проверка на тип лота
-	switch l.Status {
-	case cr:
-		return lots.Lot{}, errors.New("lot exists, but is not traded")
-	case fn:
-		return lots.Lot{}, errors.New("bidding on the lot is completed")
-	}
-
-	//проверка на время окончания действия лота
-	if l.EndAt.Before(time.Now()) {
-		return lots.Lot{}, errors.New("duration of the token has expired")
-	}
-
-	if l.CreatorID == idUser {
-		return lots.Lot{}, errors.New("you cannot buy your lot")
-	}
-
-	el, err := db.SMBBuyIT(idUser, l, newPrice)
-
-	return el, err
-}
-
 func CheckLot(l lots.LotTCU) (lots.LotTCU, error) {
 
 	if l.Status == "" {
 		l.Status = cr
 	}
 
-	if !(l.Status == cr || l.Status == "active" || l.Status == fn) {
+	if !(l.Status == cr || l.Status == ac || l.Status == fn) {
 		return lots.LotTCU{}, errors.New("unexpected status")
 	}
 
@@ -109,30 +61,82 @@ func CheckLot(l lots.LotTCU) (lots.LotTCU, error) {
 	return l, nil
 }
 
-func UpdateLot(userID int, l lots.LotTCU, id int, db storages.INTT) (lots.Lot, error) {
+func BuyLot(idUser int, idLot int, newPrice float64, db storages.INTT) (lots.Lot, error) {
 
-	lot, err := db.GetLotByID(id)
+	//проверка на ноль
+	if newPrice <= 0 {
+		return lots.Lot{}, errors.New("new price can't be less than 0")
+	}
+
+	/*us, err := db.Db().GetUserByID(idUser)
 	if err != nil {
-		return lots.Lot{}, errors.New("this lot doesn't exist")
-	}
+		return lotS.Lot{}, err
+	}*/
 
-	if userID != lot.CreatorID {
-		return lots.Lot{}, errors.New("trying to update someone else's lot")
-	}
-
-	switch lot.Status {
-	case "active":
-		return lots.Lot{}, errors.New("lot is already trading")
-	case fn:
-		return lots.Lot{}, errors.New("lot trading time is out")
-	}
-
-	l, err = CheckLot(l)
+	l, err := db.Db().GetLotByID(idLot)
 	if err != nil {
 		return lots.Lot{}, err
 	}
 
-	lt := lots.Lot{
+	err = CheckLotForTraiding(newPrice, l, idUser)
+	if err != nil {
+		return l, err
+	}
+
+	el, err := db.SMBBuyIT(idUser, l, newPrice)
+
+	return el, err
+}
+
+func CheckLotForTraiding(newPrice float64, l lots.Lot, idUser int) error {
+
+	//проверка на минимльную цену
+	if newPrice < l.MinPrice {
+		return errors.New("new price is less than the minimum")
+	}
+
+	//проверка на начальную цену
+	//проверка на шаг
+	if newPrice < l.BuyPrice+float64(l.PriceStep) && l.BuyPrice != 0 {
+		return errors.New("bad new price")
+	}
+
+	//проверка на тип лота
+	switch l.Status {
+	case cr:
+		return errors.New("lot exists, but is not traded")
+	case fn:
+		return errors.New("bidding on the lot is completed")
+	}
+
+	//проверка на время окончания действия лота
+	if l.EndAt.Before(time.Now()) {
+		return errors.New("duration of the token has expired")
+	}
+
+	if l.CreatorID == idUser {
+		return errors.New("you cannot buy your lot")
+	}
+
+	if l.BuyerID == idUser {
+		return errors.New("you already buy this lot")
+	}
+	return nil
+}
+
+func UpdateLot(userID int, l lots.LotTCU, id int, db storages.INTT) (lots.Lot, error) {
+
+	lt, err := db.GetLotByID(id)
+	if err != nil {
+		return lots.Lot{}, errors.New("this lot doesn't exist")
+	}
+
+	l, err = CheckLotForUpdate(userID, lt, l)
+	if err != nil {
+		return lots.Lot{}, err
+	}
+
+	lt2 := lots.Lot{
 		Title:       l.Title,
 		Description: l.Description,
 		MinPrice:    l.MinPrice,
@@ -142,9 +146,26 @@ func UpdateLot(userID int, l lots.LotTCU, id int, db storages.INTT) (lots.Lot, e
 		UpdatedAt:   time.Now(),
 	}
 
-	lt = db.UpdateLot(lt, id)
+	lt2 = db.UpdateLot(lt2, id)
 
-	return lt, nil
+	return lt2, nil
+}
+
+func CheckLotForUpdate(userID int, lt lots.Lot, l lots.LotTCU) (lots.LotTCU, error) {
+	if userID != lt.CreatorID {
+		return lots.LotTCU{}, errors.New("trying to update someone else's lot")
+	}
+
+	switch lt.Status {
+	case ac:
+		return lots.LotTCU{}, errors.New("lot is already trading")
+	case fn:
+		return lots.LotTCU{}, errors.New("lot trading time is out")
+	}
+
+	l, err := CheckLot(l)
+
+	return l, err
 }
 
 func DeleteLot(userID int, idLot int, db storages.INTT) error {
