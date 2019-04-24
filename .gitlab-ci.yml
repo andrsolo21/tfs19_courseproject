@@ -11,7 +11,7 @@ unit_tests:
   stage: lint-and-test
   before_script:
     - mkdir -p /go/src/gitlab.com/andrsolo21/
-    - cp -r ../gitlab.com/andrsolo21/courseproject /go/src/gitlab.com/andrsolo21/
+    - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
     - cd /go/src/gitlab.com/andrsolo21/gitlab.com/andrsolo21/courseproject
   script:
     - make test
@@ -21,7 +21,7 @@ lint:
   image: golangci/golangci-lint:v1.16.0
   before_script:
     - mkdir -p /go/src/gitlab.com/andrsolo21/
-    - cp -r ../gitlab.com/andrsolo21/courseproject /go/src/gitlab.com/andrsolo21/
+    - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
     - cd /go/src/gitlab.com/andrsolo21/gitlab.com/andrsolo21/courseproject
   stage: lint-and-test
   script: make lint
