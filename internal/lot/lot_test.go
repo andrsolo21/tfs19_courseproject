@@ -1,9 +1,10 @@
 package lot
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/lots"
 	"testing"
 	"time"
+
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
 )
 
 type testpair struct {

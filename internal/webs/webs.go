@@ -1,10 +1,11 @@
 package webs
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/storages"
 	"encoding/json"
 	"html/template"
 	"time"
+
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
 
 	"github.com/gorilla/websocket"
 )

@@ -1,17 +1,18 @@
 package auth
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/lots"
-	"gitlab.com/andrsolo21/courseproject/internal/session"
-	"gitlab.com/andrsolo21/courseproject/internal/storages"
-	"gitlab.com/andrsolo21/courseproject/internal/user"
-	"gitlab.com/andrsolo21/courseproject/internal/users"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
+
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
+	"gitlab.com/andrsolo21/courseproject/internal/session"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
+	"gitlab.com/andrsolo21/courseproject/internal/user"
+	"gitlab.com/andrsolo21/courseproject/internal/users"
 )
 
 func genToken() string {

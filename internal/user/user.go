@@ -1,11 +1,12 @@
 package user
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/users"
 	"encoding/json"
 	"strconv"
 	"time"
 	"unicode"
+
+	"gitlab.com/andrsolo21/courseproject/internal/users"
 
 	"github.com/pkg/errors"
 )

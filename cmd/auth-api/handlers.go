@@ -1,6 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"html/template"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+
 	"gitlab.com/andrsolo21/courseproject/internal/auth"
 	"gitlab.com/andrsolo21/courseproject/internal/lot"
 	"gitlab.com/andrsolo21/courseproject/internal/lots"
@@ -9,11 +15,6 @@ import (
 	"gitlab.com/andrsolo21/courseproject/internal/user"
 	"gitlab.com/andrsolo21/courseproject/internal/users"
 	"gitlab.com/andrsolo21/courseproject/pkg/log"
-	"encoding/json"
-	"html/template"
-	"io/ioutil"
-	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
@@ -211,7 +212,6 @@ func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// nolint:gocyclo
 func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
@@ -226,29 +226,21 @@ func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	var upd users.User
 
-	switch r.Header.Get("Content-Type") {
-	case "multipart/form-data":
-		upd.FirstName = r.PostFormValue("first_name")
-		upd.LastName = r.PostFormValue("last_name")
-		upd.Birthday = r.PostFormValue("Birthday") //time.Parse("2006-01-02T15:04:05-07:00", r.PostFormValue("Birthday"))
-	case "application/json":
-		var body []byte
-		body, err = ioutil.ReadAll(r.Body)
-		if err != nil {
-			//fmt.Fprintf(w, "err %q\n", err, err.Error())
-			http.Error(w, "", http.StatusBadRequest)
-			mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
-			_, _ = w.Write(mapVar)
-			return
-		}
-		err = json.Unmarshal(body, &upd)
-		if err != nil {
-			http.Error(w, "", http.StatusBadRequest)
-			mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
-			_, _ = w.Write(mapVar)
-			return
-		}
-
+	var body []byte
+	body, err = ioutil.ReadAll(r.Body)
+	if err != nil {
+		//fmt.Fprintf(w, "err %q\n", err, err.Error())
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't readAll"})
+		_, _ = w.Write(mapVar)
+		return
+	}
+	err = json.Unmarshal(body, &upd)
+	if err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+		mapVar, _ := json.Marshal(map[string]string{"error": "can't unmarshal"})
+		_, _ = w.Write(mapVar)
+		return
 	}
 
 	err = user.CheckDate(upd.Birthday)

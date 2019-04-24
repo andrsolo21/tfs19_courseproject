@@ -1,8 +1,9 @@
 package session
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/sessions"
 	"time"
+
+	"gitlab.com/andrsolo21/courseproject/internal/sessions"
 )
 
 func CreateSession(token string, id int) sessions.Session {

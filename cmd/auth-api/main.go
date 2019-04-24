@@ -1,13 +1,14 @@
 package main
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/storages"
-	tmpl "gitlab.com/andrsolo21/courseproject/internal/templates"
-	"gitlab.com/andrsolo21/courseproject/pkg/log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
+	tmpl "gitlab.com/andrsolo21/courseproject/internal/templates"
+	"gitlab.com/andrsolo21/courseproject/pkg/log"
 
 	"github.com/go-chi/chi"
 )

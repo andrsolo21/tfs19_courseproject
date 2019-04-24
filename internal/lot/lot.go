@@ -1,10 +1,11 @@
 package lot
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/lots"
-	"gitlab.com/andrsolo21/courseproject/internal/storages"
 	"errors"
 	"time"
+
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
 )
 
 const (

@@ -1,8 +1,9 @@
 package lots
 
 import (
-	"gitlab.com/andrsolo21/courseproject/internal/users"
 	"time"
+
+	"gitlab.com/andrsolo21/courseproject/internal/users"
 )
 
 type Lot struct {
