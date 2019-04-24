@@ -12,7 +12,7 @@ unit_tests:
   before_script:
     - mkdir -p /go/src/gitlab.com/andrsolo21/
     - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
-    - cd /go/src/gitlab.com/andrsolo21/gitlab.com/andrsolo21/courseproject
+    - cd /go/src/gitlab.com/andrsolo21/courseproject
   script:
     - make test
   tags: [docker]
@@ -22,7 +22,7 @@ lint:
   before_script:
     - mkdir -p /go/src/gitlab.com/andrsolo21/
     - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
-    - cd /go/src/gitlab.com/andrsolo21/gitlab.com/andrsolo21/courseproject
+    - cd /go/src/gitlab.com/andrsolo21/courseproject
   stage: lint-and-test
   script: make lint
   tags: [docker]
