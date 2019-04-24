@@ -18,3 +18,8 @@ type ShortUser struct {
 	LastName  string `json:"last_name,omitempty"`
 	ID        int    `json:"id,omitempty"`
 }
+
+
+func U(a string) string{
+	return a
+}

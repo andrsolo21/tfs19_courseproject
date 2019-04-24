@@ -35,7 +35,7 @@ func ToJSON(seq bool, us users.User) []byte {
 
 func ToShort(us users.User) users.ShortUser {
 	return users.ShortUser{
-		FirstName: us.FirstName,
+		FirstName: users.U(us.FirstName),
 		LastName:  us.LastName,
 		ID:        us.ID,
 	}
