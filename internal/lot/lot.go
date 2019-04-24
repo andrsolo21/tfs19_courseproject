@@ -23,7 +23,7 @@ func Generate(l lots.LotTCU) (lots.Lot, error) {
 
 	return lots.Lot{
 		//ID:          l.ID,
-		Title:       l.Title,
+		Title:       lots.B(l.Title),
 		Description: l.Description,
 		//BuyPrice:    l.BuyPrice,
 		MinPrice:  l.MinPrice,

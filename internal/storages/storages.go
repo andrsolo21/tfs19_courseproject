@@ -259,7 +259,7 @@ func (db DataB) DeleteCrLor(id int) {
 func (db DataB) CheckDelLot(id int) bool {
 	var c int
 
-	db.DB.Where("id = ? AND deleted_at is NOT NULL", id).Count(&c)
+	db.DB.Where("id = ?", id).Count(&c)
 
 	return c == 0
 }

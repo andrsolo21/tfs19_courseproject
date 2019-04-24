@@ -8,3 +8,7 @@ type Session struct {
 	CreatedAt  time.Time `json:"created_at" gorm:"not null"`
 	ValidUntil time.Time `json:"valid_until"`
 }
+
+func S(a string) string{
+	return a
+}
