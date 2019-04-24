@@ -13,8 +13,8 @@ unit_tests:
   stage: lint-and-test
   before_script:
     - mkdir -p /go/src/gitlab.com/andrsolo21/
-    - cp -r ../hello-app /go/src/gitlab.com/andrsolo21/
-    - cd /src/courseproject
+    - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
+    - cd /go/src/gitlab.com/andrsolo21/courseproject
   script:
     - make test
   tags: [docker]
@@ -22,9 +22,9 @@ unit_tests:
 lint:
   image: golangci/golangci-lint:v1.16.0
   before_script:
-    - mkdir -p /go/src/gitlab.com/vadimlarionov/
-    - cp -r ../hello-app /go/src/gitlab.com/vadimlarionov/
-    - cd /go/src/gitlab.com/vadimlarionov/hello-app
+    - mkdir -p /go/src/gitlab.com/andrsolo21/
+    - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
+    - cd /go/src/gitlab.com/andrsolo21/courseproject
   stage: lint-and-test
   script: make lint
   tags: [docker]

@@ -188,8 +188,19 @@ func DeleteLot(userID int, idLot int, db storages.INTT) error {
 		}
 		lot.DeletedAt = time.Now()
 		lot.UpdatedAt = time.Now()
+		lot.Status = "finished"
 		lot = db.UpdateLot(lot, idLot)
 	}
 
 	return nil
+}
+
+func Separate(lts []lots.Lot) []lots.Lot {
+	/*var lts2 []lots.Lot
+	for _, el := range lts {
+		if el.DeletedAt.After(time.Now().Add(time.Hour * 9000)) {
+			lts2 = append(lts2, el)
+		}
+	}*/
+	return lts
 }

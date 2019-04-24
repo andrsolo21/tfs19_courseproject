@@ -63,7 +63,7 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 	err = user.CheckDate(resp.Birthday)
 
 	if err != nil {
-		dbr.returnError(w, "Problem with birthday: %s", err, 400, nil)
+		dbr.returnError(w, "Problem with birthday: %s%s", err, 400, "")
 	}
 	ierr, err := auth.AddUser(resp, dbr.db.Db())
 
@@ -119,7 +119,7 @@ func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		dbr.returnError(w, "this body data doesn't support", nil, 404, nil)
+		dbr.returnError(w, "this body data doesn't support%s%s", errors.New(""), 404, "")
 	}
 
 	token, err := auth.CreateSession(m["email"], m["password"], dbr.db.Db())
@@ -158,7 +158,7 @@ func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 	ses, err := dbr.db.GetSesByToken(token)
 	if err != nil {
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -168,13 +168,13 @@ func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
-		dbr.returnError(w, "can't read user's ID: %s, %+v", err, 400, nil)
+		dbr.returnError(w, "can't read user's ID: %s, %+v", err, 400, "")
 		dbr.logger.Debugf("can't read user's ID: %s", token)
 		return
 	}
 
 	if dbr.db.CountUsers() < userID {
-		dbr.returnError(w, "user for the given ID is not found: %s, %+v", errors.New("user for the given ID is not found:"+chi.URLParam(r, "id")), 404, nil)
+		dbr.returnError(w, "user for the given ID is not found: %s, %+v", errors.New("user for the given ID is not found:"+chi.URLParam(r, "id")), 404, "")
 		//http.Error(w, "user for the given ID is not found", http.StatusNotFound)
 		return
 	}
@@ -192,7 +192,7 @@ func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		//http.Error(w, "user for the given ID not found", http.StatusNotFound)
-		dbr.returnError(w, "user for the given ID is not found: %s, %+v", errors.New("user for the given ID is not found:"+chi.URLParam(r, "id")), 404, nil)
+		dbr.returnError(w, "user for the given ID is not found: %s, %+v", errors.New("user for the given ID is not found:"+chi.URLParam(r, "id")), 404, "")
 		return
 	}
 
@@ -211,6 +211,7 @@ func (dbr rout) userGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// nolint:gocyclo
 func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Header.Get("Authorization")
@@ -219,7 +220,7 @@ func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		return
 	}
 
@@ -252,18 +253,18 @@ func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 
 	err = user.CheckDate(upd.Birthday)
 	if err != nil {
-		dbr.returnError(w, "Problem with birthday: %s", err, 400, nil)
+		dbr.returnError(w, "Problem with birthday: %s%s", err, 400, "")
 		return
 	}
 
 	if upd.FirstName == "" || upd.LastName == "" {
 		//http.Error(w, "empty names", http.StatusUnauthorized)
-		dbr.returnError(w, "first name or last name is empty", nil, 400, nil)
+		dbr.returnError(w, "first name or last name is empty%s%s", errors.New(""), 400, "")
 		return
 	}
 
-	if upd.Email != "" || upd.Password != ""{
-		dbr.returnError(w, "can't update email and/or password", nil, 400, nil)
+	if upd.Email != "" || upd.Password != "" {
+		dbr.returnError(w, "can't update email and/or password%s%s", errors.New(""), 400, "")
 		return
 	}
 
@@ -279,14 +280,14 @@ func (dbr rout) getUsersLots(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		return
 	}
 
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
-		dbr.returnError(w, "can't read user's ID", nil, 400, nil)
+		dbr.returnError(w, "can't read user's ID", nil, 400, "")
 		return
 	}
 
@@ -297,7 +298,7 @@ func (dbr rout) getUsersLots(w http.ResponseWriter, r *http.Request) {
 	}
 	lts := dbr.db.GetUsersLots(userID, typ)
 
-	jLots, err := auth.MassLotsToJSON(lts, dbr.db.Db())
+	jLots, err := auth.MassLotsToJSON(lot.Separate(lts), dbr.db.Db())
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -320,7 +321,7 @@ func (dbr rout) getLots(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		return
 	}
 
@@ -331,8 +332,9 @@ func (dbr rout) getLots(w http.ResponseWriter, r *http.Request) {
 	//typ = r.PostFormValue("status")
 	//}
 	typ := r.URL.Query().Get("status")
+	lts, _ := dbr.db.GetLots(typ)
 
-	jLots, err := auth.MassLotsToJSON(dbr.db.GetLots(typ))
+	jLots, err := auth.MassLotsToJSON(lot.Separate(lts), dbr.db)
 
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -356,7 +358,7 @@ func (dbr rout) addLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		return
 	}
 
@@ -420,7 +422,7 @@ func (dbr rout) buyLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		return
 	}
 
@@ -469,14 +471,14 @@ func (dbr rout) updateLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		return
 	}
 
 	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
-		dbr.returnError(w, "can't read user's ID", nil, 400, nil)
+		dbr.returnError(w, "can't read user's ID%s%s", errors.New(""), 400, "")
 		return
 	}
 
@@ -502,7 +504,7 @@ func (dbr rout) updateLot(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		//http.Error(w, err.Error(), 404)
-		dbr.returnError(w, "can't update lot: %s", err, 404, nil)
+		dbr.returnError(w, "can't update lot: %s%s", err, 404, "")
 		return
 	}
 
@@ -522,14 +524,14 @@ func (dbr rout) getLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s %+v", errors.New(token), 401, "")
 		return
 	}
 
 	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
-		dbr.returnError(w, "can't read user's ID", nil, 400, nil)
+		dbr.returnError(w, "can't read user's ID%s%s", errors.New(""), 400, "")
 		return
 	}
 
@@ -537,7 +539,7 @@ func (dbr rout) getLot(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		//http.Error(w, err.Error(), 404)
-		dbr.returnError(w, "can't get lot: %s", err, 404, nil)
+		dbr.returnError(w, "can't get lot: %s%s", err, 404, err)
 		return
 	}
 
@@ -557,14 +559,14 @@ func (dbr rout) deleteLot(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s%s", errors.New(token), 401, "")
 		return
 	}
 
 	lotID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
-		dbr.returnError(w, "can't read user's ID", nil, 400, nil)
+		dbr.returnError(w, "can't read user's ID%s%s", errors.New(""), 400, "")
 		return
 	}
 
@@ -573,7 +575,7 @@ func (dbr rout) deleteLot(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusNotFound)
-		dbr.returnError(w, "Can't delete error: %s ID: %d", errors.New(token), 404, lotID)
+		dbr.returnError(w, "Can't delete error: %s ID: %d", err, 404, lotID)
 		return
 	}
 
@@ -583,7 +585,7 @@ func (dbr rout) deleteLot(w http.ResponseWriter, r *http.Request) {
 func (dbr rout) getLotsHTML(w http.ResponseWriter, r *http.Request) {
 
 	lts, _ := dbr.db.GetLots("")
-	tmpl.RenderTemplate(w, "index", "base", lts, dbr.templates)
+	tmpl.RenderTemplate(w, "index", "base", lot.Separate(lts), dbr.templates)
 }
 
 func (dbr rout) lotDescrHTML(w http.ResponseWriter, r *http.Request) {
@@ -603,7 +605,8 @@ func (dbr rout) lotDescrHTML(w http.ResponseWriter, r *http.Request) {
 	tmpl.RenderTemplate(w, "lotDescription", "base", lts, dbr.templates)
 }
 
-/*func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request) {
+/*
+func (dbr rout) UpdateLots(w http.ResponseWriter, r *http.Request) {
 
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -625,6 +628,7 @@ func (dbr rout) lotDescrHTML(w http.ResponseWriter, r *http.Request) {
 
 		// Write message back to browser
 		if err = conn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
+
 			return
 		}
 	}
@@ -641,14 +645,14 @@ func (dbr rout) lotDescrHTML(w http.ResponseWriter, r *http.Request) {
 			}
 			fmt.Printf("received back from client: %s\n", string(reply[:]))
 		}
-}*/
-
+}
+*/
 func (dbr rout) returnError(w http.ResponseWriter, format string, err error, ierr int, resp interface{}) {
 
 	dbr.logger.Debugf(format, err.Error(), resp)
 
 	http.Error(w, "", ierr)
-	mapVar, _ := json.Marshal(map[string]string{"error": errors.Errorf(format, err.Error()).Error()})
+	mapVar, _ := json.Marshal(map[string]string{"error": errors.Errorf(format, err.Error(), resp).Error()})
 
 	/*if err != nil{
 		dbr.logger.Errorf("can't marshal error: %s", err.Error())
@@ -666,14 +670,14 @@ func (dbr rout) getUsersLotsHTML(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//http.Error(w, err.Error(), http.StatusUnauthorized)
 		dbr.logger.Debugf("Unauthorized request token: %s", token)
-		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, "")
 		return
 	}
 
 	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
-		dbr.returnError(w, "can't read user's ID", nil, 400, nil)
+		dbr.returnError(w, "can't read user's ID%s%s", errors.New(""), 400, "")
 		return
 	}
 
@@ -684,5 +688,5 @@ func (dbr rout) getUsersLotsHTML(w http.ResponseWriter, r *http.Request) {
 	}
 	lts := dbr.db.GetUsersLots(userID, typ)
 
-	tmpl.RenderTemplate(w, "index", "base", lts, dbr.templates)
+	tmpl.RenderTemplate(w, "index", "base", lot.Separate(lts), dbr.templates)
 }
