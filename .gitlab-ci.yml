@@ -12,9 +12,9 @@ unit_tests:
   image: golang:1.12
   stage: lint-and-test
   before_script:
-    - mkdir -p /go/src/gitlab.com/vadimlarionov/
-    - cp -r ../hello-app /go/src/gitlab.com/vadimlarionov/
-    - cd /go/src/gitlab.com/vadimlarionov/hello-app
+    - mkdir -p /go/src/gitlab.com/andrsolo21/
+    - cp -r ../hello-app /go/src/gitlab.com/andrsolo21/
+    - cd /src/courseproject
   script:
     - make test
   tags: [docker]

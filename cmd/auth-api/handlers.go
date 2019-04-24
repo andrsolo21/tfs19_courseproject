@@ -262,6 +262,11 @@ func (dbr rout) userPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if upd.Email != "" || upd.Password != ""{
+		dbr.returnError(w, "can't update email and/or password", nil, 400, nil)
+		return
+	}
+
 	us := auth.ChangeUser(sesio.UserID, upd, dbr.db.Db())
 
 	dbr.logger.Infof("User %d was changed", sesio.UserID)
