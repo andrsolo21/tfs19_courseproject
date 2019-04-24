@@ -1,5 +1,5 @@
 # Common vars
-IMPORT_PATH ?= gitlab.com/vadimlarionov/hello-app
+IMPORT_PATH ?= courseproject
 BUILD_DIR ?= bin
 PKG_DIR = .pkg
 GOROOT ?= /usr/local/go
@@ -13,7 +13,7 @@ BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
 DOCKER_BUILDER_FLAGS := --rm=true -u $$(id -u):$$(id -g) -v $(CURDIR):/go/src/$(IMPORT_PATH) -w /go/src/$(IMPORT_PATH)
 DOCKER_BUILDER_IMAGE := golang:1.12
 
-DOCKER_IMAGE_SPACE ?= vadimlarionov
+DOCKER_IMAGE_SPACE ?= andrsolo21
 DOCKER_IMAGE_TAG ?= $(VERSION)#$$(git rev-parse --abbrev-ref HEAD)
 
 # Build targets
@@ -81,11 +81,11 @@ proto:
     --grpc-gateway_out=logtostderr=true:. \
     internal/consignment/prtest.proto
 
-protoc -I/usr/local/include -I. \
--I${GOPATH}/src \
--I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
---swagger_out=logtostderr=true:. \
-internal/consignment/prtest.proto
+	protoc -I/usr/local/include -I. \
+	-I${GOPATH}/src \
+	-I${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+	--swagger_out=logtostderr=true:. \
+	internal/consignment/prtest.proto
 
 
 

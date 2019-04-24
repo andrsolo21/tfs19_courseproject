@@ -82,6 +82,13 @@ func ConvertDate(us users.UserInp) (us2 users.User, err error) {
 
 func CheckDate(date string) error {
 
+	if date == ""{
+		return nil
+	}
+
+	if len(date) != 10{
+		return errors.New("can't parse date")
+	}
 	if date[4:5] != "-" && date[7:8] != "-" {
 		return errors.New("delimetr is not -")
 	}
@@ -91,5 +98,15 @@ func CheckDate(date string) error {
 			return errors.Errorf("it is not a digit %c", el)
 		}
 	}
+
+	date = date + " 15:04:05-07:00"
+
+	_, err := time.Parse("2006-01-02 15:04:05-07:00", date)
+
+	if err!= nil{
+		return errors.New("this month or day doesn't exist")
+	}
+
+
 	return nil
 }

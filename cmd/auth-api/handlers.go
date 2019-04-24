@@ -61,8 +61,9 @@ func (dbr rout) signup(w http.ResponseWriter, r *http.Request) {
 	}
 	*/
 	err = user.CheckDate(resp.Birthday)
+
 	if err != nil {
-		dbr.returnError(w, "Problem with birthday: %s, %+v", err, 400, nil)
+		dbr.returnError(w, "Problem with birthday: %s", err, 400, nil)
 	}
 	ierr, err := auth.AddUser(resp, dbr.db.Db())
 
