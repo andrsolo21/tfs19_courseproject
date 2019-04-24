@@ -100,8 +100,8 @@ func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 	m := make(map[string]string)
 	switch r.Header.Get("Content-Type") {
 	case "multipart/form-data":
-		m["email"] = r.PostFormValue("first_name")
-		m["password"] = r.PostFormValue("last_name")
+		m["email"] = r.PostFormValue("email")
+		m["password"] = r.PostFormValue("password")
 	case "application/json":
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -118,7 +118,8 @@ func (dbr rout) signin(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write(mapVar)
 			return
 		}
-
+	default:
+		dbr.returnError(w, "this body data doesn't support", nil, 404, nil)
 	}
 
 	token, err := auth.CreateSession(m["email"], m["password"], dbr.db.Db())
@@ -652,4 +653,31 @@ func (dbr rout) returnError(w http.ResponseWriter, format string, err error, ier
 	if err != nil {
 		dbr.logger.Errorf("can't send message: %s", err.Error())
 	}
+}
+
+func (dbr rout) getUsersLotsHTML(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+	ses, err := dbr.db.GetSesByToken(token)
+	if err != nil {
+		//http.Error(w, err.Error(), http.StatusUnauthorized)
+		dbr.logger.Debugf("Unauthorized request token: %s", token)
+		dbr.returnError(w, "Unauthorized request token: %s, %+v", errors.New(token), 401, nil)
+		return
+	}
+
+	userID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		//http.Error(w, "can't read user's ID", http.StatusBadRequest)
+		dbr.returnError(w, "can't read user's ID", nil, 400, nil)
+		return
+	}
+
+	typ := r.URL.Query().Get("type")
+
+	if userID == 0 {
+		userID = ses.UserID
+	}
+	lts := dbr.db.GetUsersLots(userID, typ)
+
+	tmpl.RenderTemplate(w, "index", "base", lts, dbr.templates)
 }

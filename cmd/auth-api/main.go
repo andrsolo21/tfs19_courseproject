@@ -62,6 +62,7 @@ func main() {
 
 		r.Get("/lots/html", data2.getLotsHTML)
 		r.Get("/lot/{id}/html", data2.lotDescrHTML)
+		r.Get("/users/{id}/lots/html", data2.getUsersLotsHTML)
 
 	})
 
