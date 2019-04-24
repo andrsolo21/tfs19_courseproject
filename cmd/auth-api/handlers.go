@@ -1,14 +1,14 @@
 package main
 
 import (
-	"courseproject/internal/auth"
-	"courseproject/internal/lot"
-	"courseproject/internal/lots"
-	"courseproject/internal/storages"
-	tmpl "courseproject/internal/templates"
-	"courseproject/internal/user"
-	"courseproject/internal/users"
-	"courseproject/pkg/log"
+	"gitlab.com/andrsolo21/courseproject/internal/auth"
+	"gitlab.com/andrsolo21/courseproject/internal/lot"
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
+	tmpl "gitlab.com/andrsolo21/courseproject/internal/templates"
+	"gitlab.com/andrsolo21/courseproject/internal/user"
+	"gitlab.com/andrsolo21/courseproject/internal/users"
+	"gitlab.com/andrsolo21/courseproject/pkg/log"
 	"encoding/json"
 	"html/template"
 	"io/ioutil"

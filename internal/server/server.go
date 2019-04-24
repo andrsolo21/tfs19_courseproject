@@ -10,7 +10,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	//pb "github.com/maddevsio/grpc-rest-api-example/pb"
-	pb "courseproject/internal/consignment"
+	pb "gitlab.com/andrsolo21/courseproject/internal/consignment"
 
 	"google.golang.org/grpc"
 )

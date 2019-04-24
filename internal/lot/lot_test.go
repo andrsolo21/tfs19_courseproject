@@ -1,7 +1,7 @@
 package lot
 
 import (
-	"courseproject/internal/lots"
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
 	"testing"
 	"time"
 )

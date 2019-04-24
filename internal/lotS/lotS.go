@@ -1,7 +1,7 @@
 package lots
 
 import (
-	"courseproject/internal/users"
+	"gitlab.com/andrsolo21/courseproject/internal/users"
 	"time"
 )
 

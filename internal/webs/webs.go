@@ -1,7 +1,7 @@
 package webs
 
 import (
-	"courseproject/internal/storages"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
 	"encoding/json"
 	"html/template"
 	"time"

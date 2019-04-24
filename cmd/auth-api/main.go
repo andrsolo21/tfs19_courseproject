@@ -1,9 +1,9 @@
 package main
 
 import (
-	"courseproject/internal/storages"
-	tmpl "courseproject/internal/templates"
-	"courseproject/pkg/log"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
+	tmpl "gitlab.com/andrsolo21/courseproject/internal/templates"
+	"gitlab.com/andrsolo21/courseproject/pkg/log"
 	"net/http"
 	"os"
 	"path/filepath"

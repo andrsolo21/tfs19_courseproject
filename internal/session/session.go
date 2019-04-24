@@ -1,7 +1,7 @@
 package session
 
 import (
-	"courseproject/internal/sessions"
+	"gitlab.com/andrsolo21/courseproject/internal/sessions"
 	"time"
 )
 

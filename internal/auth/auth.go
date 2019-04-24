@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"courseproject/internal/lots"
-	"courseproject/internal/session"
-	"courseproject/internal/storages"
-	"courseproject/internal/user"
-	"courseproject/internal/users"
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
+	"gitlab.com/andrsolo21/courseproject/internal/session"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
+	"gitlab.com/andrsolo21/courseproject/internal/user"
+	"gitlab.com/andrsolo21/courseproject/internal/users"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"

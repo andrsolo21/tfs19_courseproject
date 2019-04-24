@@ -1,7 +1,7 @@
 package user
 
 import (
-	"courseproject/internal/users"
+	"gitlab.com/andrsolo21/courseproject/internal/users"
 	"encoding/json"
 	"strconv"
 	"time"

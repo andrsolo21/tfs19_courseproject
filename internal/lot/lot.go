@@ -1,8 +1,8 @@
 package lot
 
 import (
-	"courseproject/internal/lots"
-	"courseproject/internal/storages"
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
 	"errors"
 	"time"
 )

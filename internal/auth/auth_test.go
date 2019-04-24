@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"courseproject/internal/lots"
-	"courseproject/internal/sessions"
-	"courseproject/internal/storages"
-	"courseproject/internal/users"
-	"courseproject/pkg/log"
+	"gitlab.com/andrsolo21/courseproject/internal/lots"
+	"gitlab.com/andrsolo21/courseproject/internal/sessions"
+	"gitlab.com/andrsolo21/courseproject/internal/storages"
+	"gitlab.com/andrsolo21/courseproject/internal/users"
+	"gitlab.com/andrsolo21/courseproject/pkg/log"
 
 	"testing"
 )

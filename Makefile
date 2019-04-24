@@ -1,5 +1,5 @@
 # Common vars
-IMPORT_PATH ?= courseproject
+IMPORT_PATH ?= gitlab.com/andrsolo21/courseproject
 BUILD_DIR ?= bin
 PKG_DIR = .pkg
 GOROOT ?= /usr/local/go
