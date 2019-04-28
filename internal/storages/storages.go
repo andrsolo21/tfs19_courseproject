@@ -37,7 +37,7 @@ type INTT interface {
 	UpdateLot(l lots.Lot, id int) lots.Lot
 	KillBadLots(logger log.Logger)
 	DeleteCrLor(id int)
-	CheckDelLot(id int) bool
+	CheckDelLot(id int) (bool, lots.Lot)
 }
 
 func NewDataB() (d DataB, err error) {
@@ -256,10 +256,10 @@ func (db DataB) DeleteCrLor(id int) {
 	db.DB.Where("id = ?", id).Delete(lots.Lot{})
 }
 
-func (db DataB) CheckDelLot(id int) bool {
+func (db DataB) CheckDelLot(id int) (bool, lots.Lot) {
 	var c int
+	var tr lots.Lot
+	db.DB.Where("id = ?", id).Count(&c).First(&tr)
 
-	db.DB.Where("id = ?", id).Count(&c)
-
-	return c == 0
+	return c == 0, tr
 }
