@@ -1,0 +1,43 @@
+{{define "head"}}<title>Список доступных лотов</title>{{end}}
+{{define "body"}}
+<h1>Лоты</h1>
+
+<div>
+    <table border="1">
+        <tr>
+            <th>ИД лота</th>
+            <th>Название</th>
+            <th>Статус</th>
+            <th>Текущая цена</th>
+        </tr>
+        {{range $key,$value := . }}
+        <tr>
+            <td id="ID">{{$value.ID}}</td>
+            <td id="Title">{{$value.Title}}</td>
+            <td id="Status">{{$value.Status}}</td>
+            <td id="Price">{{$value.BuyPrice}}</td>
+            <td>
+                <a href="/v1/auction/lot/{{$value.ID}}/html">Описание лота</a> |
+            </td>
+        </tr>
+        {{end}}
+    </table>
+</div>
+
+<script type="text/javascript">
+    var ID = document.getElementById("input");
+    var title = document.getElementById("Title");
+    var status = document.getElementById("Status");
+    var price = document.getElementById("Price");
+
+    var socket = new WebSocket("ws://localhost:5001/ws")
+
+    socket.onmessage = function(event) {
+        var data = JSON.parse(event);
+        ID.value = data.id;
+        title.value = data.title;
+        status.value = data.status;
+        price.value = data.buy_price;
+    };
+</script>
+{{end}}

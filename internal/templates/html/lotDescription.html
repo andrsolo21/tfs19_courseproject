@@ -1,0 +1,61 @@
+{{define "head"}}<title>Описание лота</title>{{end}}
+{{define "body"}}
+    <h1>Лот</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <th>ИД лота</th>
+                <td>{{.ID}}</td>
+            </tr>
+            <tr>
+                <th>Название</th>
+                <td>{{.Title}}</td>
+            </tr>
+            <tr>
+                <th>Описание</th>
+                <td>{{.Description}}</td>
+            </tr>
+            <tr>
+                <th>Создатель</th>
+                <td>{{.CreatorID}}</td>
+            </tr>
+            <tr>
+                <th>Минимальная цена покупки</th>
+                <td>{{.MinPrice}}</td>
+            </tr>
+            <tr>
+                <th>Шаг</th>
+                <td>{{.PriceStep}}</td>
+            </tr>
+            <tr>
+                <th>Статус</th>
+                <td>{{.Status}}</td>
+            </tr>
+            <tr>
+                <th>Время окончания</th>
+                <td>{{.EndAt}}</td>
+            </tr>
+            <tr>
+                <th>Покупатель</th>
+                <td>{{.BuyerID}}</td>
+            </tr>
+            <tr>
+                <th>Текущая цена</th>
+                <td>{{.BuyPrice}}</td>
+            </tr>
+            <tr>
+                <th>Создано</th>
+                <td>{{.CreatedAt}}</td>
+            </tr>
+            <tr>
+                <th>Обновлено</th>
+                <td>{{.UpdatedAt}}</td>
+            </tr>
+            <tr>
+                <th>Удалено</th>
+                <td>{{.DeletedAt}}</td>
+            </tr>
+        </table>
+        <!--<a href="/v1/auction/lots/html">Все лоты</a>-->
+    </div>
+{{end}}

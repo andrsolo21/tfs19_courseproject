@@ -1,0 +1,29 @@
+stages:
+  - lint-and-test
+
+variables:
+  # When using dind, it's wise to use the overlayfs driver for
+  # improved performance.
+  DOCKER_DRIVER: overlay2
+
+unit_tests:
+  image: golang:1.12
+  stage: lint-and-test
+  before_script:
+    - mkdir -p /go/src/gitlab.com/andrsolo21/
+    - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
+    - cd /go/src/gitlab.com/andrsolo21/courseproject
+  script:
+    - make test
+  tags: [docker]
+
+lint:
+  image: golangci/golangci-lint:v1.16.0
+  before_script:
+    - mkdir -p /go/src/gitlab.com/andrsolo21/
+    - cp -r ../courseproject /go/src/gitlab.com/andrsolo21/
+    - cd /go/src/gitlab.com/andrsolo21/courseproject
+  stage: lint-and-test
+  script: make lint
+  tags: [docker]
+
